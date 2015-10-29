@@ -1,0 +1,21 @@
+RUN=false
+SRC=false
+
+for var in "$@"
+do
+	if [ "$var" == "--pack" ]; then
+		echo Packing app...
+		zip -r -j app.nw dist
+
+		echo Running packed app...
+		SRC="./app.nw"
+	else
+		SRC="./dist"
+	fi
+
+	if [ "$var" == "--run" ]; then
+		RUN=true
+		echo Running from development folder...
+		./bin/nwjs.app/Contents/MacOS/nwjs $SRC
+	fi
+done

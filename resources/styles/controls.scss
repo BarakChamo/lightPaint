@@ -1,0 +1,35 @@
+.controls {
+	opacity: 0.75;
+	padding: $grid-gutter-width;
+	height:100vh;
+	width: 100vw;
+
+	display:flex;
+  align-items: center;
+	justify-content: center;
+	flex-flow: row wrap;
+}
+
+.source, .transport {
+	flex: 1 100%;
+	width: 100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.source {
+  align-self: flex-start;
+}
+
+.transport {
+  align-self: flex-end;
+}
+
+.center {
+	margin: auto;
+}
+
+.dropdown-menu {
+	padding: 0;
+	overflow: hidden;
+}

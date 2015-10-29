@@ -1,0 +1,41 @@
+@import 'bootstrap';
+@import 'controls';
+@import 'fonts';
+
+// React fucking sucks balls
+// And redux does as well
+// Fuck you!
+
+* {
+        user-select: none;
+   -moz-user-select: none;
+-webkit-user-select: none;
+    -ms-user-select: none;
+
+    outline: none !important;
+
+    font-family: 'Share Tech Mono';
+}
+
+body {
+	margin: 0;
+	background: black;
+}
+
+.media-preview, video {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+}
+
+.app {
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.bg-video {
+	position: fixed;
+	z-index: -1;
+}
