@@ -16,7 +16,7 @@ import App from './components/App'
 import mediaManager from './controllers/media'
 
 // Actions
-import { setSources, setStream, setDisplay } from './actions'
+import { setSources, setStream, setDisplay, setPreview } from './actions'
 
 // Action Constants
 import { displayModes } from './actions'

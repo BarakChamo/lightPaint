@@ -3,8 +3,15 @@ import ReactDOM from 'react-dom'
 
 export default class Media extends React.Component {
 	shouldComponentUpdate(nextProps) {
-		console.log(nextProps)
-		this.setStream(nextProps.stream)
+		// Update video source
+		if (this.props.stream !== nextProps.stream) this.vid.src = nextProps.stream
+		
+		// Update capture preview
+		if(this.props.preview !== nextProps.preview) this.preview.src = nextProps.preview
+
+		// Update render
+		// TODO!
+
 		return false
 	}
 
@@ -12,14 +19,11 @@ export default class Media extends React.Component {
 		const elm = ReactDOM.findDOMNode(this)
 
 		// Get elements
-		this.vid = elm.getElementsByTagName('video')[0]
-		this.img = elm.getElementsByTagName('img')[0]
+		this.vid 		 = elm.getElementsByTagName('video')[0]
+		this.preview = elm.getElementsByTagName('img')[0]
+		this.render  = elm.getElementsByTagName('img')[1]
 
 		this.props.onMount(this.vid)
-	}
-
-	setStream(streamUrl) {
-		this.vid.src = streamUrl
 	}
 
 	render() {

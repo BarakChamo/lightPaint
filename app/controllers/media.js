@@ -1,9 +1,9 @@
 import { GIF } from 'gif.js/dist/gif'
 import Emitter from 'eventemitter3'
-console.log('GIF', GIF)
+
 // Shim getUserMedia
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
-window.URL = (webkitURL || URL)
+window.URL = (URL || webkitURL)
 
 // Create upload input
 const input = document.createElement('input')
@@ -81,7 +81,6 @@ class MediaManager extends Emitter {
 					.then(sources => {
 						// TEMP: needs to match source selection, not first available
 						this.constraints.video.optional[0].sourceId = this.sources[0]
-			
 
 						navigator.getUserMedia(this.constraints,
 							stream => {
@@ -111,24 +110,28 @@ class MediaManager extends Emitter {
 		if (rec) {
 			// Create new GIF capture
 			this.capture = new GIF({
-				// workers: 4,
-				// quality: 10,
-				width:   this.video.videoWidth  / 2,
-				height:  this.video.videoHeight / 2
+				workers: 8,
+				quality: 10,
+				width:   this.video.videoWidth,
+				height:  this.video.videoHeight
 			})
+
+			// Update canvas dimensions
+			this.ctx.canvas.width  = this.video.videoWidth
+			this.ctx.canvas.height = this.video.videoHeight
 
 			// Assign new capture handler
 			this.capture.on('finished', blob => {
-				// this.previewUrl = URL.createObjectURL(blob)
-				console.log('BLOB', blob)
+				this.preview = blob
+
 				// Emit a new preview event to update display
-				// this.emit('preview', previewUrl)
+				this.emit('preview', URL.createObjectURL(blob))
 			})
 
 			// Start adding frames at playback framerate
 			this.interval = setInterval(( ) => {
 				// Draw video to canvas
-    		this.ctx.drawImage(this.video, 0, 0)
+    		this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
     		// Add frame to capture
 	      this.capture.addFrame(this.ctx, {
@@ -185,7 +188,6 @@ class MediaManager extends Emitter {
 	}
 
 	handleUpload(file) {
-		console.log(file)
 		this.file = file
 		this.emit('stream', file.path)//URL.createObjectURL(file))
 	}

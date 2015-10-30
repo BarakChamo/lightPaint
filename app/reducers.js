@@ -10,7 +10,7 @@ import { playModes, renderModes, displayModes } from './actions'
 /*
 	Reducers
 */ 
-const disp = displayModes.RECORD
+const disp = displayModes.SPLASH
 
 const display   = (state = disp,  action) => action.type === SET_DISPLAY  ? action.display   : state
 const preview   = (state = '',    action) => action.type === SET_PREVIEW  ? action.preview   : state

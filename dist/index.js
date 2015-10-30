@@ -77,7 +77,7 @@ webpackJsonp([0],[
 	// New capture preview
 	_controllersMedia2['default'].on('preview', function (previewUrl) {
 		// Update the preview URL
-		store.dispatch(setPreview(previewUrl));
+		store.dispatch((0, _actions.setPreview)(previewUrl));
 	
 		// Set the display to playback preview mode
 		store.dispatch((0, _actions.setDisplay)(_actions.displayModes.PLAYBACK));
@@ -1436,7 +1436,7 @@ webpackJsonp([0],[
 	/*
 		Reducers
 	*/
-	var disp = _actions.displayModes.RECORD;
+	var disp = _actions.displayModes.SPLASH;
 	
 	var display = function display(state, action) {
 		if (state === undefined) state = disp;
@@ -1507,8 +1507,10 @@ webpackJsonp([0],[
 		value: true
 	});
 	var SET_DISPLAY = 'SET_DISPLAY';
-	
 	exports.SET_DISPLAY = SET_DISPLAY;
+	var SET_PREVIEW = 'SET_PREVIEW';
+	
+	exports.SET_PREVIEW = SET_PREVIEW;
 	// Capture and transport actions
 	var SET_SOURCE = 'SET_SOURCE';
 	exports.SET_SOURCE = SET_SOURCE;
@@ -1537,6 +1539,7 @@ webpackJsonp([0],[
 	*/
 	
 	var displayModes = {
+		SPLASH: 'SPLASH',
 		RECORD: 'RECORD',
 		PLAYBACK: 'PLAYBACK',
 		RENDER: 'RENDER'
@@ -1692,17 +1695,28 @@ webpackJsonp([0],[
 			value: function render() {
 				var _this = this;
 	
-				var transport = undefined;
+				var controls = undefined;
 				var _props = this.props;
 				var dispatch = _props.dispatch;
 				var visibleTodos = _props.visibleTodos;
 				var visibilityFilter = _props.visibilityFilter;
 	
-				console.log(this.props.display);
-	
 				switch (this.props.display) {
+					case _actions.displayModes.SPLASH:
+						controls = _react2['default'].createElement(
+							'div',
+							{ className: 'splash' },
+							_react2['default'].createElement(
+								'div',
+								{ className: 'splash-inner' },
+								'LightPaint v1.0'
+							)
+						);
+	
+						break;
+	
 					case _actions.displayModes.RECORD:
-						transport = _react2['default'].createElement(
+						controls = _react2['default'].createElement(
 							'div',
 							{ className: 'btn-group center' },
 							_react2['default'].createElement(
@@ -1710,21 +1724,21 @@ webpackJsonp([0],[
 								{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
 										return _this.record(_this.props.recording);
 									} },
-								'RECORD'
+								'Record'
 							),
 							_react2['default'].createElement(
 								'button',
 								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
 										return _controllersMedia2['default'].upload();
 									} },
-								'UPLOAD'
+								'Upload'
 							)
 						);
 	
 						break;
 	
 					case _actions.displayModes.PLAYBACK:
-						transport = _react2['default'].createElement(
+						controls = _react2['default'].createElement(
 							'div',
 							{ className: 'btn-group center' },
 							_react2['default'].createElement(
@@ -1753,7 +1767,7 @@ webpackJsonp([0],[
 						break;
 	
 					case _actions.displayModes.RENDER:
-						transport = _react2['default'].createElement(
+						controls = _react2['default'].createElement(
 							'div',
 							{ className: 'btn-group center' },
 							_react2['default'].createElement(
@@ -1781,6 +1795,7 @@ webpackJsonp([0],[
 					{ className: 'app flicker scanlines' },
 					_react2['default'].createElement(_Media2['default'], {
 						stream: this.props.stream,
+						preview: this.props.preview,
 						onMount: function (video) {
 							return _controllersMedia2['default'].setElement(video);
 						}
@@ -1802,7 +1817,7 @@ webpackJsonp([0],[
 						_react2['default'].createElement(
 							'div',
 							{ className: 'transport' },
-							transport
+							controls
 						)
 					)
 				);
@@ -2294,8 +2309,15 @@ webpackJsonp([0],[
 		_createClass(Media, [{
 			key: 'shouldComponentUpdate',
 			value: function shouldComponentUpdate(nextProps) {
-				console.log(nextProps);
-				this.setStream(nextProps.stream);
+				// Update video source
+				if (this.props.stream !== nextProps.stream) this.vid.src = nextProps.stream;
+	
+				// Update capture preview
+				if (this.props.preview !== nextProps.preview) this.preview.src = nextProps.preview;
+	
+				// Update render
+				// TODO!
+	
 				return false;
 			}
 		}, {
@@ -2305,14 +2327,10 @@ webpackJsonp([0],[
 	
 				// Get elements
 				this.vid = elm.getElementsByTagName('video')[0];
-				this.img = elm.getElementsByTagName('img')[0];
+				this.preview = elm.getElementsByTagName('img')[0];
+				this.render = elm.getElementsByTagName('img')[1];
 	
 				this.props.onMount(this.vid);
-			}
-		}, {
-			key: 'setStream',
-			value: function setStream(streamUrl) {
-				this.vid.src = streamUrl;
 			}
 		}, {
 			key: 'render',
@@ -2460,10 +2478,9 @@ webpackJsonp([0],[
 	
 	var _eventemitter32 = _interopRequireDefault(_eventemitter3);
 	
-	console.log('GIF', _gifJsDistGif.GIF);
 	// Shim getUserMedia
 	navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-	window.URL = webkitURL || URL;
+	window.URL = URL || webkitURL;
 	
 	// Create upload input
 	var input = document.createElement('input');
@@ -2581,24 +2598,28 @@ webpackJsonp([0],[
 				if (rec) {
 					// Create new GIF capture
 					this.capture = new _gifJsDistGif.GIF({
-						// workers: 4,
-						// quality: 10,
-						width: this.video.videoWidth / 2,
-						height: this.video.videoHeight / 2
+						workers: 8,
+						quality: 10,
+						width: this.video.videoWidth,
+						height: this.video.videoHeight
 					});
+	
+					// Update canvas dimensions
+					this.ctx.canvas.width = this.video.videoWidth;
+					this.ctx.canvas.height = this.video.videoHeight;
 	
 					// Assign new capture handler
 					this.capture.on('finished', function (blob) {
-						// this.previewUrl = URL.createObjectURL(blob)
-						console.log('BLOB', blob);
+						_this3.preview = blob;
+	
 						// Emit a new preview event to update display
-						// this.emit('preview', previewUrl)
+						_this3.emit('preview', URL.createObjectURL(blob));
 					});
 	
 					// Start adding frames at playback framerate
 					this.interval = setInterval(function () {
 						// Draw video to canvas
-						_this3.ctx.drawImage(_this3.video, 0, 0);
+						_this3.ctx.drawImage(_this3.video, 0, 0, _this3.video.videoWidth, _this3.video.videoHeight, 0, 0, _this3.ctx.canvas.width, _this3.ctx.canvas.height);
 	
 						// Add frame to capture
 						_this3.capture.addFrame(_this3.ctx, {
@@ -2658,7 +2679,6 @@ webpackJsonp([0],[
 		}, {
 			key: 'handleUpload',
 			value: function handleUpload(file) {
-				console.log(file);
 				this.file = file;
 				this.emit('stream', file.path); //URL.createObjectURL(file))
 			}

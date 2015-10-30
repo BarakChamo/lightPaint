@@ -23,24 +23,33 @@ class App extends React.Component {
 	}
 
 	render() {
-		let transport
+		let controls
 		const { dispatch, visibleTodos, visibilityFilter } = this.props
 
-		console.log(this.props.display)
-
 		switch(this.props.display) {
+			case displayModes.SPLASH:
+				controls = (
+					<div className='splash'>
+						<div className='splash-inner'>
+							LightPaint v1.0
+						</div>
+					</div>
+				)
+
+				break;
+
 			case displayModes.RECORD:
-				transport = (
+				controls = (
 					<div className='btn-group center'>
-						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RECORD</button>
-						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>UPLOAD</button>
+						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>Record</button>
+						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>Upload</button>
 					</div>
 				)
 
 				break;
 
 			case displayModes.PLAYBACK:
-				transport = (
+				controls = (
 					<div className='btn-group center'>
 						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>&lt;&lt;</button>
 						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RECORD</button>
@@ -51,7 +60,7 @@ class App extends React.Component {
 				break;
 
 			case displayModes.RENDER:
-				transport = (
+				controls = (
 					<div className='btn-group center'>
 						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RECORD</button>
 						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>UPLOAD</button>
@@ -66,6 +75,7 @@ class App extends React.Component {
 			<div className='app flicker scanlines'>
 				<Media 
 					stream ={ this.props.stream }
+					preview={ this.props.preview }
 					onMount={ video => mediaManager.setElement(video) }
 				/>
 
@@ -79,7 +89,7 @@ class App extends React.Component {
 					</div>
 
 					<div className='transport'>
-						{ transport }
+						{ controls }
 					</div>
 				</div>
 			</div>

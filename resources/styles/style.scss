@@ -22,7 +22,17 @@ body {
 	background: black;
 }
 
-.media-preview, video {
+i {
+	font-family: arial !important;
+	font-style: normal;
+	font-size: 2em;
+	line-height:1em;
+}
+
+.splash,
+.media-preview, 
+.media-preview video,
+.media-preview img {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -38,4 +48,19 @@ body {
 .bg-video {
 	position: fixed;
 	z-index: -1;
+}
+
+.splash {
+	display: flex;
+	left: 0;
+	right: 0;
+	background: white;
+	color: #666;
+	text-align: center;
+	align-items: center;
+	justify-content: center;
+
+	.splash-inner {
+		flex-direction:column;
+	}
 }

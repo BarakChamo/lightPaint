@@ -4,6 +4,7 @@
 
 // App display management
 export const SET_DISPLAY   = 'SET_DISPLAY'
+export const SET_PREVIEW   = 'SET_PREVIEW'
 
 // Capture and transport actions
 export const SET_SOURCE   = 'SET_SOURCE'
@@ -24,6 +25,7 @@ export const START_RENDER = 'START_RENDER'
 */ 
 
 export const displayModes = {
+	SPLASH:   'SPLASH',
 	RECORD:   'RECORD',
 	PLAYBACK: 'PLAYBACK',
 	RENDER:   'RENDER'
