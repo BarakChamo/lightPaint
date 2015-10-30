@@ -1,6 +1,6 @@
-import Recorder 		from 'recordrtc'
-import EventEmitter from 'eventemitter3'
-
+import { GIF } from 'gif.js/dist/gif'
+import Emitter from 'eventemitter3'
+console.log('GIF', GIF)
 // Shim getUserMedia
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
 window.URL = (webkitURL || URL)
@@ -10,7 +10,9 @@ const input = document.createElement('input')
 input.type = 'file'
 input.accept = 'video/*'
 
-class MediaManager extends EventEmitter {
+const FRAME_RATE = 1000 / 25
+
+class MediaManager extends Emitter {
 	constructor() {
 		super()
 
@@ -107,30 +109,69 @@ class MediaManager extends EventEmitter {
 		// `rec` is a boolean for start/stop
 
 		if (rec) {
-			// Clear previous recordings
-			this.recorder && this.recorder.clearRecordedData()
-
-			// Initialize recorder with source video parameters
-			this.recorder = new Recorder(this.stream, {
-				type: 'video', 
-				quality: 1,
-				numberOfAudioChannels: 0,
-				video: {
-					width: this.video.videoWidth,
-					height:this.video.videoHeight
-				},
-				canvas: {
-					width: this.video.videoWidth,
-					height:this.video.videoHeight
-				}
+			// Create new GIF capture
+			this.capture = new GIF({
+				// workers: 4,
+				// quality: 10,
+				width:   this.video.videoWidth  / 2,
+				height:  this.video.videoHeight / 2
 			})
 
-			// Start new recording
-			this.recorder.startRecording()
+			// Assign new capture handler
+			this.capture.on('finished', blob => {
+				// this.previewUrl = URL.createObjectURL(blob)
+				console.log('BLOB', blob)
+				// Emit a new preview event to update display
+				// this.emit('preview', previewUrl)
+			})
+
+			// Start adding frames at playback framerate
+			this.interval = setInterval(( ) => {
+				// Draw video to canvas
+    		this.ctx.drawImage(this.video, 0, 0)
+
+    		// Add frame to capture
+	      this.capture.addFrame(this.ctx, {
+	        copy: true,
+	        delay: FRAME_RATE
+	      })
+		    
+			}, FRAME_RATE)
+
+			/*
+				Video capture - obselete
+			*/ 
+
+			// // Clear previous recordings
+			// this.recorder && this.recorder.clearRecordedData()
+
+			// // Initialize recorder with source video parameters
+			// this.recorder = new Recorder(this.stream, {
+			// 	type: 'video', 
+			// 	quality: 1,
+			// 	numberOfAudioChannels: 0,
+			// 	video: {
+			// 		width: this.video.videoWidth,
+			// 		height:this.video.videoHeight
+			// 	},
+			// 	canvas: {
+			// 		width: this.video.videoWidth,
+			// 		height:this.video.videoHeight
+			// 	}
+			// })
+
+			// // Start new recording
+			// this.recorder.startRecording()
 
 		} else {
 			// Stop recording
-			this.recorder.stopRecording(streamUrl => this.emit('stream', streamUrl))
+			// this.recorder.stopRecording(streamUrl => this.emit('stream', streamUrl))
+
+			// Stop adding frames
+			clearInterval(this.interval)
+
+			// Render capture
+			this.capture.render()
 		}
 	}
 

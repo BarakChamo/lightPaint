@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 
 export default class Media extends React.Component {
 	shouldComponentUpdate(nextProps) {
+		console.log(nextProps)
 		this.setStream(nextProps.stream)
 		return false
 	}
@@ -25,6 +26,7 @@ export default class Media extends React.Component {
 		return (
 			<div className="media-preview">
 				<video className="media-preview-video" autoPlay loop/>
+				<img 	 className="media-preview-capture"/>
 				<img 	 className="media-preview-image"/>
 			</div>
 		);

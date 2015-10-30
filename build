@@ -8,7 +8,9 @@ do
 		zip -r -j app.nw dist
 
 		echo Running packed app...
-		SRC="./app.nw"
+
+		# Old node-webkit setup
+		#SRC="./app.nw"
 	else
 		SRC="./dist"
 	fi
@@ -16,6 +18,10 @@ do
 	if [ "$var" == "--run" ]; then
 		RUN=true
 		echo Running from development folder...
-		./bin/nwjs.app/Contents/MacOS/nwjs $SRC
+
+		# Old node-webkit setup
+		#./bin/nwjs.app/Contents/MacOS/nwjs $SRC
+
+		./bin/Electron.app/Contents/MacOS/Electron $SRC		
 	fi
 done

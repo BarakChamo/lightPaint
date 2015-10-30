@@ -28,16 +28,27 @@ const store = createStore(app)
 	Bind media manager events
 */
 
+// New video sources
 mediaManager.on( 'sources', sources => {
 	store.dispatch(setSources(sources))
 })
 
+// New video streams
 mediaManager.on( 'stream', (stream, live) => {
 	// Set new stream
 	store.dispatch(setStream(stream))
 
 	// Check if new stream is live feed stream or recording
 	store.dispatch(setDisplay( live ? displayModes.RECORD : displayModes.PLAYBACK ))
+})
+
+// New capture preview
+mediaManager.on( 'preview', (previewUrl) => {
+	// Update the preview URL
+	store.dispatch(setPreview(previewUrl))
+
+	// Set the display to playback preview mode
+	store.dispatch(setDisplay(displayModes.PLAYBACK))
 })
 
 

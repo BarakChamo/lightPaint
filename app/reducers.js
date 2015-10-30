@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux'
 
 // Action types
-import { SET_DISPLAY, SET_SOURCE, SET_SOURCES, SET_STREAM, RECORD_VIDEO, UPLOAD_VIDEO, PLAY_VIDEO, SET_RANGE, SET_RENDER, START_RENDER } from './actions'
+import { SET_DISPLAY, SET_PREVIEW, SET_SOURCE, SET_SOURCES, SET_STREAM, RECORD_VIDEO, UPLOAD_VIDEO, PLAY_VIDEO, SET_RANGE, SET_RENDER, START_RENDER } from './actions'
 
 // Action constants
 import { playModes, renderModes, displayModes } from './actions'
@@ -13,6 +13,7 @@ import { playModes, renderModes, displayModes } from './actions'
 const disp = displayModes.RECORD
 
 const display   = (state = disp,  action) => action.type === SET_DISPLAY  ? action.display   : state
+const preview   = (state = '',    action) => action.type === SET_PREVIEW  ? action.preview   : state
 const source    = (state = 0,     action) => action.type === SET_SOURCE   ? action.source  	 : state
 const sources   = (state = [],    action) => action.type === SET_SOURCES  ? action.sources 	 : state
 const stream    = (state = '',    action) => action.type === SET_STREAM   ? action.stream  	 : state
@@ -37,6 +38,7 @@ const app = combineReducers({
 	source,
 	sources,
 	stream,
+	preview,
 	recording,
 	display
 	// playMode,

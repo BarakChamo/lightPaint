@@ -51,6 +51,7 @@ export const renderRange = {
 
 // App display management
 export const setDisplay = display => ({ type: SET_DISPLAY,  display })
+export const setPreview = preview => ({ type: SET_PREVIEW,  preview })
 
 // Capture source management actions
 export const setSource  = source  => ({ type: SET_SOURCE,  source  })
