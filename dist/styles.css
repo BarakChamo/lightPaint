@@ -2720,7 +2720,11 @@ a.bg-danger:focus, a.bg-danger:hover {
   align-self: flex-end; }
 
 .center {
-  margin: auto; }
+  margin: auto;
+  text-align: center; }
+
+.full-width {
+  width: 100%; }
 
 .dropdown-menu {
   padding: 0;
@@ -2780,5 +2784,38 @@ i {
   justify-content: center; }
   .splash .splash-inner {
     flex-direction: column; }
+.control-range input {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  position: relative;
+  background: transparent; }
+  .control-range input:after {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    content: '';
+    width: 100%;
+    border-radius: 2px;
+    height: 2px;
+    border: 1px solid #ccc;
+    background-color: #ccc; }
+  .control-range input::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    z-index: 1000;
+    height: 10px;
+    width: 10px;
+    border-radius: 100%;
+    background: #ccc;
+    cursor: pointer;
+    margin-top: -4px;
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    transition: color 0.2s; }
+
+.control-range input[type=range]:focus {
+  outline: none; }
 
 /*# sourceMappingURL=styles.css.map*/

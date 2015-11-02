@@ -1437,30 +1437,39 @@ webpackJsonp([0],[
 		Reducers
 	*/
 	var disp = _actions.displayModes.SPLASH;
+	var pl = _actions.playModes.PLAY;
 	
 	var display = function display(state, action) {
 		if (state === undefined) state = disp;
-		return action.type === _actions.SET_DISPLAY ? action.display : state;
+		return action.type !== _actions.SET_DISPLAY ? state : action.display;
 	};
 	var preview = function preview(state, action) {
 		if (state === undefined) state = '';
-		return action.type === _actions.SET_PREVIEW ? action.preview : state;
+		return action.type !== _actions.SET_PREVIEW ? state : action.preview;
+	};
+	var position = function position(state, action) {
+		if (state === undefined) state = { pos: 0 };
+		return action.type !== _actions.SET_POSITION ? state : action;
 	};
 	var source = function source(state, action) {
 		if (state === undefined) state = 0;
-		return action.type === _actions.SET_SOURCE ? action.source : state;
+		return action.type !== _actions.SET_SOURCE ? state : action.source;
 	};
 	var sources = function sources(state, action) {
 		if (state === undefined) state = [];
-		return action.type === _actions.SET_SOURCES ? action.sources : state;
+		return action.type !== _actions.SET_SOURCES ? state : action.sources;
 	};
 	var stream = function stream(state, action) {
 		if (state === undefined) state = '';
-		return action.type === _actions.SET_STREAM ? action.stream : state;
+		return action.type !== _actions.SET_STREAM ? state : action.stream;
 	};
 	var recording = function recording(state, action) {
 		if (state === undefined) state = false;
-		return action.type === _actions.RECORD_VIDEO ? action.recording : state;
+		return action.type !== _actions.RECORD_VIDEO ? state : action.recording;
+	};
+	var play = function play(state, action) {
+		if (state === undefined) state = pl;
+		return action.type !== _actions.SET_PLAY_MODE ? state : action.mode;
 	};
 	
 	// function renderMode(state = renderModes.LIGHTER, action) {
@@ -1483,12 +1492,13 @@ webpackJsonp([0],[
 		stream: stream,
 		preview: preview,
 		recording: recording,
-		display: display
-		// playMode,
-		// renderMode,
-		// renderRange
+		display: display,
+		position: position,
+		play: play
 	});
 	
+	// renderMode,
+	// renderRange
 	exports['default'] = app;
 	module.exports = exports['default'];
 
@@ -1526,6 +1536,11 @@ webpackJsonp([0],[
 	var PLAY_VIDEO = 'PLAY_VIDEO';
 	
 	exports.PLAY_VIDEO = PLAY_VIDEO;
+	var SET_POSITION = 'SET_POSITION';
+	exports.SET_POSITION = SET_POSITION;
+	var SET_PLAY_MODE = 'SET_PLAY_MODE';
+	
+	exports.SET_PLAY_MODE = SET_PLAY_MODE;
 	// Render actions
 	var SET_RANGE = 'SET_RANGE';
 	exports.SET_RANGE = SET_RANGE;
@@ -1564,6 +1579,12 @@ webpackJsonp([0],[
 	};
 	
 	exports.renderRange = renderRange;
+	var positionSources = {
+		MEDIA: false,
+		SEEK: true
+	};
+	
+	exports.positionSources = positionSources;
 	/*
 		action creators
 	*/
@@ -1606,6 +1627,15 @@ webpackJsonp([0],[
 	};
 	
 	exports.playVideo = playVideo;
+	var setPosition = function setPosition(pos, src) {
+		return { type: SET_POSITION, pos: pos, src: src };
+	};
+	exports.setPosition = setPosition;
+	var setPlayMode = function setPlayMode(mode) {
+		return { type: SET_PLAY_MODE, mode: mode };
+	};
+	
+	exports.setPlayMode = setPlayMode;
 	// Render action creators
 	var setRenderRange = function setRenderRange(mode, value) {
 		return { type: SET_RANGE, mode: mode, value: value };
@@ -1654,6 +1684,8 @@ webpackJsonp([0],[
 	
 	var _actions = __webpack_require__(183);
 	
+	// Action constants
+	
 	// Components
 	
 	var _Media = __webpack_require__(214);
@@ -1664,13 +1696,15 @@ webpackJsonp([0],[
 	
 	var _controlsDropdown2 = _interopRequireDefault(_controlsDropdown);
 	
+	var _controlsRange = __webpack_require__(279);
+	
+	var _controlsRange2 = _interopRequireDefault(_controlsRange);
+	
 	// Controllers
 	
 	var _controllersMedia = __webpack_require__(216);
 	
 	var _controllersMedia2 = _interopRequireDefault(_controllersMedia);
-	
-	// Action constants
 	
 	var App = (function (_React$Component) {
 		_inherits(App, _React$Component);
@@ -1695,7 +1729,8 @@ webpackJsonp([0],[
 			value: function render() {
 				var _this = this;
 	
-				var controls = undefined;
+				var top = undefined,
+				    bottom = undefined;
 				var _props = this.props;
 				var dispatch = _props.dispatch;
 				var visibleTodos = _props.visibleTodos;
@@ -1703,7 +1738,7 @@ webpackJsonp([0],[
 	
 				switch (this.props.display) {
 					case _actions.displayModes.SPLASH:
-						controls = _react2['default'].createElement(
+						bottom = _react2['default'].createElement(
 							'div',
 							{ className: 'splash' },
 							_react2['default'].createElement(
@@ -1716,58 +1751,80 @@ webpackJsonp([0],[
 						break;
 	
 					case _actions.displayModes.RECORD:
-						controls = _react2['default'].createElement(
+						top = _react2['default'].createElement(_controlsDropdown2['default'], {
+							options: this.props.sources,
+							selected: this.props.source,
+							onSelect: function (i) {
+								return dispatch((0, _actions.setSource)(i));
+							}
+						});
+	
+						bottom = _react2['default'].createElement(
 							'div',
-							{ className: 'btn-group center' },
+							{ className: 'center full-width' },
 							_react2['default'].createElement(
-								'button',
-								{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
-										return _this.record(_this.props.recording);
-									} },
-								'Record'
-							),
-							_react2['default'].createElement(
-								'button',
-								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
-										return _controllersMedia2['default'].upload();
-									} },
-								'Upload'
+								'div',
+								{ className: 'btn-group' },
+								_react2['default'].createElement(
+									'button',
+									{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
+											return _this.record(_this.props.recording);
+										} },
+									'Record'
+								),
+								_react2['default'].createElement(
+									'button',
+									{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
+											return _controllersMedia2['default'].upload();
+										} },
+									'Upload'
+								)
 							)
 						);
 	
 						break;
 	
 					case _actions.displayModes.PLAYBACK:
-						controls = _react2['default'].createElement(
+						top = _react2['default'].createElement(
 							'div',
-							{ className: 'btn-group center' },
+							{ className: 'btn-group' },
 							_react2['default'].createElement(
 								'button',
 								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
-										return _controllersMedia2['default'].upload();
+										return console.log('BACK');
 									} },
-								'<<'
-							),
+								'BACK'
+							)
+						);
+	
+						bottom = _react2['default'].createElement(
+							'div',
+							{ className: 'center full-width' },
+							_react2['default'].createElement(_controlsRange2['default'], { className: 'control-range full-width',
+								position: this.props.position.pos,
+								onChange: function (position) {
+									return dispatch((0, _actions.setPosition)(position, true));
+								},
+								onSeek: function (seeking) {
+									return dispatch((0, _actions.setPlayMode)(seeking ? _actions.playModes.PAUSE : _actions.playModes.PLAY));
+								} }),
 							_react2['default'].createElement(
-								'button',
-								{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
-										return _this.record(_this.props.recording);
-									} },
-								'RECORD'
-							),
-							_react2['default'].createElement(
-								'button',
-								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
-										return _controllersMedia2['default'].upload();
-									} },
-								'>>'
+								'div',
+								{ className: 'btn-group center' },
+								_react2['default'].createElement(
+									'button',
+									{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
+											return _this.record(_this.props.recording);
+										} },
+									'RENDER'
+								)
 							)
 						);
 	
 						break;
 	
 					case _actions.displayModes.RENDER:
-						controls = _react2['default'].createElement(
+						bottom = _react2['default'].createElement(
 							'div',
 							{ className: 'btn-group center' },
 							_react2['default'].createElement(
@@ -1794,10 +1851,16 @@ webpackJsonp([0],[
 					'div',
 					{ className: 'app flicker scanlines' },
 					_react2['default'].createElement(_Media2['default'], {
+						position: this.props.position,
 						stream: this.props.stream,
+						play: this.props.play === _actions.playModes.PLAY,
 						preview: this.props.preview,
+						playback: this.props.display === _actions.displayModes.PLAYBACK,
 						onMount: function (video) {
 							return _controllersMedia2['default'].setElement(video);
+						},
+						onUpdate: function (pos) {
+							return dispatch((0, _actions.setPosition)(pos, _actions.positionSources.MEDIA));
 						}
 					}),
 					_react2['default'].createElement(
@@ -1806,18 +1869,12 @@ webpackJsonp([0],[
 						_react2['default'].createElement(
 							'div',
 							{ className: 'source' },
-							_react2['default'].createElement(_controlsDropdown2['default'], {
-								options: this.props.sources,
-								selected: this.props.source,
-								onSelect: function (i) {
-									return dispatch((0, _actions.setSource)(i));
-								}
-							})
+							top
 						),
 						_react2['default'].createElement(
 							'div',
 							{ className: 'transport' },
-							controls
+							bottom
 						)
 					)
 				);
@@ -2315,6 +2372,11 @@ webpackJsonp([0],[
 				// Update capture preview
 				if (this.props.preview !== nextProps.preview) this.preview.src = nextProps.preview;
 	
+				// Update current video position
+				if (this.props.position.src) this.vid.currentTime = this.props.position.pos / 1000 * this.vid.duration;
+	
+				if (this.props.play !== nextProps.play) nextProps.play ? this.vid.play() : this.vid.pause();
+	
 				// Update render
 				// TODO!
 	
@@ -2323,6 +2385,8 @@ webpackJsonp([0],[
 		}, {
 			key: 'componentDidMount',
 			value: function componentDidMount() {
+				var _this = this;
+	
 				var elm = _reactDom2['default'].findDOMNode(this);
 	
 				// Get elements
@@ -2330,7 +2394,19 @@ webpackJsonp([0],[
 				this.preview = elm.getElementsByTagName('img')[0];
 				this.render = elm.getElementsByTagName('img')[1];
 	
+				// Assign the video element to the media manager
+				// Ugly, I know...
 				this.props.onMount(this.vid);
+	
+				// Handle time update events (the video is moving)
+				this.vid.ontimeupdate = function (e) {
+					return _this.timeUpdate(e);
+				};
+			}
+		}, {
+			key: 'timeUpdate',
+			value: function timeUpdate(e) {
+				if (this.props.playback && this.props.play) this.props.onUpdate(1000.0 / this.vid.duration * this.vid.currentTime);
 			}
 		}, {
 			key: 'render',
@@ -2611,7 +2687,7 @@ webpackJsonp([0],[
 					// Assign new capture handler
 					this.capture.on('finished', function (blob) {
 						_this3.preview = blob;
-	
+						console.dir(_this3.capture.frames);
 						// Emit a new preview event to update display
 						_this3.emit('preview', URL.createObjectURL(blob));
 					});
@@ -2627,41 +2703,13 @@ webpackJsonp([0],[
 							delay: FRAME_RATE
 						});
 					}, FRAME_RATE);
-	
-					/*
-	    	Video capture - obselete
-	    */
-	
-					// // Clear previous recordings
-					// this.recorder && this.recorder.clearRecordedData()
-	
-					// // Initialize recorder with source video parameters
-					// this.recorder = new Recorder(this.stream, {
-					// 	type: 'video',
-					// 	quality: 1,
-					// 	numberOfAudioChannels: 0,
-					// 	video: {
-					// 		width: this.video.videoWidth,
-					// 		height:this.video.videoHeight
-					// 	},
-					// 	canvas: {
-					// 		width: this.video.videoWidth,
-					// 		height:this.video.videoHeight
-					// 	}
-					// })
-	
-					// // Start new recording
-					// this.recorder.startRecording()
 				} else {
-						// Stop recording
-						// this.recorder.stopRecording(streamUrl => this.emit('stream', streamUrl))
+					// Stop adding frames
+					clearInterval(this.interval);
 	
-						// Stop adding frames
-						clearInterval(this.interval);
-	
-						// Render capture
-						this.capture.render();
-					}
+					// Render capture
+					this.capture.render();
+				}
 			}
 		}, {
 			key: 'capture',
@@ -3908,6 +3956,126 @@ webpackJsonp([0],[
 	}
 
 
-/***/ }
+/***/ },
+/* 260 */,
+/* 261 */,
+/* 262 */,
+/* 263 */,
+/* 264 */,
+/* 265 */,
+/* 266 */,
+/* 267 */,
+/* 268 */,
+/* 269 */,
+/* 270 */,
+/* 271 */,
+/* 272 */,
+/* 273 */,
+/* 274 */,
+/* 275 */,
+/* 276 */,
+/* 277 */,
+/* 278 */,
+/* 279 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _get = __webpack_require__(185)['default'];
+	
+	var _inherits = __webpack_require__(199)['default'];
+	
+	var _createClass = __webpack_require__(210)['default'];
+	
+	var _classCallCheck = __webpack_require__(213)['default'];
+	
+	var _interopRequireDefault = __webpack_require__(2)['default'];
+	
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+	
+	__webpack_require__(280);
+	
+	var _react = __webpack_require__(8);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactDom = __webpack_require__(163);
+	
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+	
+	var Range = (function (_React$Component) {
+		_inherits(Range, _React$Component);
+	
+		function Range() {
+			_classCallCheck(this, Range);
+	
+			_get(Object.getPrototypeOf(Range.prototype), 'constructor', this).call(this);
+	
+			this.state = {
+				click: false
+			};
+		}
+	
+		_createClass(Range, [{
+			key: 'shouldComponentUpdate',
+			value: function shouldComponentUpdate(nextProps) {
+				if (!this.state.click) this.elm.value = nextProps.position;
+				return false;
+			}
+		}, {
+			key: 'componentDidMount',
+			value: function componentDidMount() {
+				this.elm = _reactDom2['default'].findDOMNode(this).getElementsByTagName('input')[0];
+			}
+		}, {
+			key: 'seek',
+			value: function seek(e) {
+				var p = parseFloat(e.target.value);
+	
+				if (isNaN(p)) return;
+	
+				this.props.onChange(e.target.value);
+			}
+		}, {
+			key: 'click',
+			value: function click(isDown) {
+				this.setState({ click: isDown });
+				this.props.onSeek(isDown);
+			}
+		}, {
+			key: 'render',
+			value: function render() {
+				var _this = this;
+	
+				return _react2['default'].createElement(
+					'div',
+					{ className: 'control-range' },
+					_react2['default'].createElement('input', { type: 'range', min: 0.0, max: 1000.0, step: 0.1,
+						defaultValue: this.props.position,
+						onChange: function (e) {
+							return _this.seek(e);
+						},
+						onMouseDown: function (e) {
+							return _this.click(true);
+						},
+						onMouseUp: function (e) {
+							return _this.click(false);
+						}
+					})
+				);
+			}
+		}]);
+	
+		return Range;
+	})(_react2['default'].Component);
+	
+	exports['default'] = Range;
+	module.exports = exports['default'];
+
+/***/ },
+/* 280 */
+3
 ]);
 //# sourceMappingURL=index.js.map

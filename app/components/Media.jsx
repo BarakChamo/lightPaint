@@ -9,6 +9,11 @@ export default class Media extends React.Component {
 		// Update capture preview
 		if(this.props.preview !== nextProps.preview) this.preview.src = nextProps.preview
 
+		// Update current video position
+		if (this.props.position.src) this.vid.currentTime = ( (this.props.position.pos / 1000) * this.vid.duration )
+
+		if (this.props.play !== nextProps.play) nextProps.play ? this.vid.play() : this.vid.pause()
+
 		// Update render
 		// TODO!
 
@@ -23,7 +28,16 @@ export default class Media extends React.Component {
 		this.preview = elm.getElementsByTagName('img')[0]
 		this.render  = elm.getElementsByTagName('img')[1]
 
+		// Assign the video element to the media manager
+		// Ugly, I know...
 		this.props.onMount(this.vid)
+
+		// Handle time update events (the video is moving)
+		this.vid.ontimeupdate = e => this.timeUpdate(e)
+	}
+
+	timeUpdate(e){
+		if (this.props.playback && this.props.play) this.props.onUpdate( (1000.0 / this.vid.duration) * this.vid.currentTime )
 	}
 
 	render() {

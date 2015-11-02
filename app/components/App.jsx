@@ -3,17 +3,18 @@ import ReactDOM 	 from 'react-dom'
 import { connect } from 'react-redux'
 
 // Actions
-import { setSource, recordVideo } from '../actions'
+import { setSource, recordVideo, setPosition, setPlayMode } from '../actions'
+
+// Action constants
+import { displayModes, positionSources, playModes } from '../actions'
 
 // Components
 import Media from './Media'
 import Dropdown  from './controls/Dropdown'
+import Range     from './controls/Range'
 
 // Controllers
 import mediaManager from '../controllers/media'
-
-// Action constants
-import { displayModes } from '../actions'
 
 class App extends React.Component {
 	record(recording) {
@@ -23,12 +24,12 @@ class App extends React.Component {
 	}
 
 	render() {
-		let controls
+		let top, bottom
 		const { dispatch, visibleTodos, visibilityFilter } = this.props
 
 		switch(this.props.display) {
 			case displayModes.SPLASH:
-				controls = (
+				bottom = (
 					<div className='splash'>
 						<div className='splash-inner'>
 							LightPaint v1.0
@@ -39,28 +40,49 @@ class App extends React.Component {
 				break;
 
 			case displayModes.RECORD:
-				controls = (
-					<div className='btn-group center'>
-						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>Record</button>
-						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>Upload</button>
+				top = (
+					<Dropdown
+						options= { this.props.sources }
+						selected={ this.props.source }
+						onSelect={ i => dispatch(setSource(i)) }
+					/>
+				)
+
+				bottom = (
+					<div className='center full-width'>
+						<div className='btn-group'>
+							<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>Record</button>
+							<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>Upload</button>
+						</div>
 					</div>
 				)
 
 				break;
 
 			case displayModes.PLAYBACK:
-				controls = (
-					<div className='btn-group center'>
-						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>&lt;&lt;</button>
-						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RECORD</button>
-						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>&gt;&gt;</button>
+				top = (
+					<div className='btn-group'>
+						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => console.log('BACK') }>BACK</button>
+					</div>
+				)
+
+				bottom = (
+					<div className='center full-width'>
+						<Range className='control-range full-width' 
+									 position={ this.props.position.pos }
+									 onChange={ position => dispatch(setPosition( position, true ) ) }
+									 onSeek={ seeking => dispatch(setPlayMode( seeking ? playModes.PAUSE : playModes.PLAY )) } />
+						
+						<div className='btn-group center'>
+							<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RENDER</button>
+						</div>
 					</div>
 				)
 
 				break;
 
 			case displayModes.RENDER:
-				controls = (
+				bottom = (
 					<div className='btn-group center'>
 						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RECORD</button>
 						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>UPLOAD</button>
@@ -74,22 +96,22 @@ class App extends React.Component {
 		return (
 			<div className='app flicker scanlines'>
 				<Media 
-					stream ={ this.props.stream }
-					preview={ this.props.preview }
-					onMount={ video => mediaManager.setElement(video) }
+					position= { this.props.position } 
+					stream=   { this.props.stream }
+					play=     { this.props.play === playModes.PLAY }
+					preview=  { this.props.preview }
+					playback= { this.props.display === displayModes.PLAYBACK }
+					onMount=  { video => mediaManager.setElement(video) }
+					onUpdate= { pos => dispatch(setPosition(pos, positionSources.MEDIA)) }
 				/>
 
 				<div className='controls container-fluid'>
 					<div className='source'>
-							<Dropdown
-								options= { this.props.sources }
-								selected={ this.props.source }
-								onSelect={ i => dispatch(setSource(i)) }
-							/>
+						{ top }
 					</div>
 
 					<div className='transport'>
-						{ controls }
+						{ bottom }
 					</div>
 				</div>
 			</div>

@@ -15,6 +15,9 @@ export const RECORD_VIDEO = 'RECORD_VIDEO'
 export const UPLOAD_VIDEO = 'UPLOAD_VIDEO'
 export const PLAY_VIDEO   = 'PLAY_VIDEO'
 
+export const SET_POSITION  = 'SET_POSITION'
+export const SET_PLAY_MODE = 'SET_PLAY_MODE'
+
 // Render actions
 export const SET_RANGE    = 'SET_RANGE'
 export const SET_RENDER   = 'SET_RENDER'
@@ -46,6 +49,11 @@ export const renderRange = {
 	TO: 	1
 }
 
+export const positionSources = {
+	MEDIA:false,
+	SEEK: true
+}
+
 
 /*
 	action creators
@@ -60,13 +68,15 @@ export const setSource  = source  => ({ type: SET_SOURCE,  source  })
 export const setSources = sources => ({ type: SET_SOURCES, sources })
 export const setStream  = stream  => ({ type: SET_STREAM,  stream  })
 
-
 // Capture and transport action creators
-export const recordVideo = recording => ({ type: RECORD_VIDEO, recording })
+export const recordVideo = recording => ({ type: RECORD_VIDEO, recording  })
 export const uploadVideo = video 		 => ({ type: UPLOAD_VIDEO, video 		 })
-export const playVideo   = mode  		 => ({ type: PLAY_VIDEO,   mode  		 })
+export const playVideo   = mode  	   => ({ type: PLAY_VIDEO,   mode  		 })
+
+export const setPosition = (pos, src) => ({ type: SET_POSITION,  pos, src })
+export const setPlayMode = (mode)     => ({ type: SET_PLAY_MODE, mode     })
 
 // Render action creators
 export const setRenderRange = (mode, value) => ({ type: SET_RANGE,  mode, value })
-export const setRenderMode  = (mode) 				=> ({ type: SET_RENDER, mode })
-export const render         = ()            => ({ type: START_RENDER })
+export const setRenderMode  = (mode) 				=> ({ type: SET_RENDER, mode        })
+export const render         = ()            => ({ type: START_RENDER            })

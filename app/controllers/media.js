@@ -123,7 +123,7 @@ class MediaManager extends Emitter {
 			// Assign new capture handler
 			this.capture.on('finished', blob => {
 				this.preview = blob
-
+				console.dir(this.capture.frames)
 				// Emit a new preview event to update display
 				this.emit('preview', URL.createObjectURL(blob))
 			})
@@ -141,35 +141,7 @@ class MediaManager extends Emitter {
 		    
 			}, FRAME_RATE)
 
-			/*
-				Video capture - obselete
-			*/ 
-
-			// // Clear previous recordings
-			// this.recorder && this.recorder.clearRecordedData()
-
-			// // Initialize recorder with source video parameters
-			// this.recorder = new Recorder(this.stream, {
-			// 	type: 'video', 
-			// 	quality: 1,
-			// 	numberOfAudioChannels: 0,
-			// 	video: {
-			// 		width: this.video.videoWidth,
-			// 		height:this.video.videoHeight
-			// 	},
-			// 	canvas: {
-			// 		width: this.video.videoWidth,
-			// 		height:this.video.videoHeight
-			// 	}
-			// })
-
-			// // Start new recording
-			// this.recorder.startRecording()
-
 		} else {
-			// Stop recording
-			// this.recorder.stopRecording(streamUrl => this.emit('stream', streamUrl))
-
 			// Stop adding frames
 			clearInterval(this.interval)
 
