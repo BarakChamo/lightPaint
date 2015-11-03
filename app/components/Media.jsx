@@ -47,6 +47,6 @@ export default class Media extends React.Component {
 				<img 	 className="media-preview-capture"/>
 				<img 	 className="media-preview-image"/>
 			</div>
-		);
+		)
 	}
 }

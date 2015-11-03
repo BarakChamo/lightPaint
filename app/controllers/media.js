@@ -1,5 +1,6 @@
 import { GIF } from 'gif.js/dist/gif'
 import Emitter from 'eventemitter3'
+import Whammy  from './whammy'
 
 // Shim getUserMedia
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
@@ -10,7 +11,7 @@ const input = document.createElement('input')
 input.type = 'file'
 input.accept = 'video/*'
 
-const FRAME_RATE = 1000 / 25
+const FRAME_RATE = 25
 
 class MediaManager extends Emitter {
 	constructor() {
@@ -38,6 +39,9 @@ class MediaManager extends Emitter {
 
 		// Get available video sources
 		this.sources = []
+
+		// Captured image frames
+		this.capture = new Whammy.Video(FRAME_RATE / 2)
 	}
 
 	// Get available video sources
@@ -108,50 +112,24 @@ class MediaManager extends Emitter {
 		// `rec` is a boolean for start/stop
 
 		if (rec) {
-			// Create new GIF capture
-			this.capture = new GIF({
-				workers: 8,
-				quality: 10,
-				width:   this.video.videoWidth,
-				height:  this.video.videoHeight
-			})
-
 			// Update canvas dimensions
 			this.ctx.canvas.width  = this.video.videoWidth
 			this.ctx.canvas.height = this.video.videoHeight
 
-			// Assign new capture handler
-			this.capture.on('finished', blob => {
-				this.preview = blob
-				console.dir(this.capture.frames)
-				// Emit a new preview event to update display
-				this.emit('preview', URL.createObjectURL(blob))
-			})
-
 			// Start adding frames at playback framerate
-			this.interval = setInterval(( ) => {
+			this.interval = setInterval( () => {
 				// Draw video to canvas
-    		this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
+				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
-    		// Add frame to capture
-	      this.capture.addFrame(this.ctx, {
-	        copy: true,
-	        delay: FRAME_RATE
-	      })
-		    
-			}, FRAME_RATE)
+				// Capture a frame
+				this.capture.add(this.ctx)
+			}, 1000 / FRAME_RATE )
 
 		} else {
 			// Stop adding frames
 			clearInterval(this.interval)
-
-			// Render capture
-			this.capture.render()
+			this.emit('stream', URL.createObjectURL( this.capture.compile() ) )
 		}
-	}
-
-	capture() {
-
 	}
 
 	upload() {
