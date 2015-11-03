@@ -2694,6 +2694,9 @@ webpackJsonp([0],[
 	
 			// Get available video sources
 			this.sources = [];
+	
+			// Captured frames
+			this.frames = [];
 		}
 	
 		// Export a singleton instance of the media manager
@@ -2781,6 +2784,9 @@ webpackJsonp([0],[
 	
 				if (rec) {
 					(function () {
+						// Clear the frame capture
+						_this3.frames = [];
+	
 						// Captured image frames
 						_this3.capture = new _whammy2['default'].Video(undefined, QUALITY);
 	
@@ -2800,8 +2806,21 @@ webpackJsonp([0],[
 							// Draw video to canvas
 							_this3.ctx.drawImage(_this3.video, 0, 0, _this3.video.videoWidth, _this3.video.videoHeight, 0, 0, _this3.ctx.canvas.width, _this3.ctx.canvas.height);
 	
+							n = Date.now();
+							console.log('1 - ', n - now);
+							now = n;
+	
 							// Capture a frame
 							_this3.capture.add(_this3.ctx, ts - dt);
+	
+							n = Date.now();
+							console.log('2 - ', n - now);
+							now = n;
+	
+							_this3.frames.push(_this3.ctx.getImageData(0, 0, _this3.video.videoWidth, _this3.video.videoHeight));
+							n = Date.now();
+							console.log('3 - ', n - now);
+							now = n;
 	
 							dt = ts;
 							if (_this3.capturing) requestAnimationFrame(captureLoop);
@@ -2817,6 +2836,9 @@ webpackJsonp([0],[
 					requestAnimationFrame(function (ts) {
 						return _this3.emit('stream', URL.createObjectURL(_this3.capture.compile()));
 					});
+					// requestAnimationFrame(
+					// 	ts => this.emit('stream', URL.createObjectURL( Whammy.fromImageArray(image[], FRAME_RATE) ))
+					// )
 				}
 			}
 		}, {

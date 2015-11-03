@@ -40,6 +40,9 @@ class MediaManager extends Emitter {
 
 		// Get available video sources
 		this.sources = []
+
+		// Captured frames
+		this.frames = []
 	}
 
 	// Get available video sources
@@ -110,6 +113,9 @@ class MediaManager extends Emitter {
 		// `rec` is a boolean for start/stop
 
 		if (rec) {
+			// Clear the frame capture
+			this.frames = []
+
 			// Captured image frames
 			this.capture = new Whammy.Video(undefined, QUALITY)
 
@@ -125,12 +131,24 @@ class MediaManager extends Emitter {
 			const captureLoop = (ts) => {
 				let n, now = Date.now()
 
-
 				// Draw video to canvas
 				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
+				n = Date.now()
+				console.log('1 - ', n - now)
+				now = n
+
 				// Capture a frame
 				this.capture.add(this.ctx, ts - dt)
+
+				n = Date.now()
+				console.log('2 - ', n - now)
+				now = n
+
+				this.frames.push( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
+				n = Date.now()
+				console.log('3 - ', n - now)
+				now = n
 
 				dt = ts
 				if (this.capturing) requestAnimationFrame(captureLoop)
@@ -144,6 +162,9 @@ class MediaManager extends Emitter {
 			this.capturing = false
 			console.log(this.capture)
 			requestAnimationFrame(ts => this.emit('stream', URL.createObjectURL( this.capture.compile() )) )
+			// requestAnimationFrame(
+			// 	ts => this.emit('stream', URL.createObjectURL( Whammy.fromImageArray(image[], FRAME_RATE) )) 
+			// )
 		}
 	}
 
