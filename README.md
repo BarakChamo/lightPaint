@@ -1,2 +1,2 @@
 # lightPaint
-A light-painting app built with NW.js
+A light-painting app built with Electron
