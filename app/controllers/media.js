@@ -11,7 +11,8 @@ const input = document.createElement('input')
 input.type = 'file'
 input.accept = 'video/*'
 
-const FRAME_RATE = 25
+const FRAME_RATE = 25,
+			QUALITY    = 0.01
 
 class MediaManager extends Emitter {
 	constructor() {
@@ -39,9 +40,6 @@ class MediaManager extends Emitter {
 
 		// Get available video sources
 		this.sources = []
-
-		// Captured image frames
-		this.capture = new Whammy.Video(FRAME_RATE / 2)
 	}
 
 	// Get available video sources
@@ -112,23 +110,40 @@ class MediaManager extends Emitter {
 		// `rec` is a boolean for start/stop
 
 		if (rec) {
+			// Captured image frames
+			this.capture = new Whammy.Video(undefined, QUALITY)
+
 			// Update canvas dimensions
 			this.ctx.canvas.width  = this.video.videoWidth
 			this.ctx.canvas.height = this.video.videoHeight
 
+			this.capturing = true
+
 			// Start adding frames at playback framerate
-			this.interval = setInterval( () => {
+			let dt
+
+			const captureLoop = (ts) => {
+				let n, now = Date.now()
+
+
 				// Draw video to canvas
 				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
 				// Capture a frame
-				this.capture.add(this.ctx)
-			}, 1000 / FRAME_RATE )
+				this.capture.add(this.ctx, ts - dt)
+
+				dt = ts
+				if (this.capturing) requestAnimationFrame(captureLoop)
+			}
+
+			dt = performance.now()
+			requestAnimationFrame(captureLoop)
 
 		} else {
 			// Stop adding frames
-			clearInterval(this.interval)
-			this.emit('stream', URL.createObjectURL( this.capture.compile() ) )
+			this.capturing = false
+			console.log(this.capture)
+			requestAnimationFrame(ts => this.emit('stream', URL.createObjectURL( this.capture.compile() )) )
 		}
 	}
 

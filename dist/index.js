@@ -2670,7 +2670,8 @@ webpackJsonp([0],[
 	input.type = 'file';
 	input.accept = 'video/*';
 	
-	var FRAME_RATE = 25;
+	var FRAME_RATE = 25,
+	    QUALITY = 0.01;
 	
 	var MediaManager = (function (_Emitter) {
 		_inherits(MediaManager, _Emitter);
@@ -2693,9 +2694,6 @@ webpackJsonp([0],[
 	
 			// Get available video sources
 			this.sources = [];
-	
-			// Captured image frames
-			this.capture = new _whammy2['default'].Video(FRAME_RATE / 2);
 		}
 	
 		// Export a singleton instance of the media manager
@@ -2782,22 +2780,43 @@ webpackJsonp([0],[
 				// `rec` is a boolean for start/stop
 	
 				if (rec) {
-					// Update canvas dimensions
-					this.ctx.canvas.width = this.video.videoWidth;
-					this.ctx.canvas.height = this.video.videoHeight;
+					(function () {
+						// Captured image frames
+						_this3.capture = new _whammy2['default'].Video(undefined, QUALITY);
 	
-					// Start adding frames at playback framerate
-					this.interval = setInterval(function () {
-						// Draw video to canvas
-						_this3.ctx.drawImage(_this3.video, 0, 0, _this3.video.videoWidth, _this3.video.videoHeight, 0, 0, _this3.ctx.canvas.width, _this3.ctx.canvas.height);
+						// Update canvas dimensions
+						_this3.ctx.canvas.width = _this3.video.videoWidth;
+						_this3.ctx.canvas.height = _this3.video.videoHeight;
 	
-						// Capture a frame
-						_this3.capture.add(_this3.ctx);
-					}, 1000 / FRAME_RATE);
+						_this3.capturing = true;
+	
+						// Start adding frames at playback framerate
+						var dt = undefined;
+	
+						var captureLoop = function captureLoop(ts) {
+							var n = undefined,
+							    now = Date.now();
+	
+							// Draw video to canvas
+							_this3.ctx.drawImage(_this3.video, 0, 0, _this3.video.videoWidth, _this3.video.videoHeight, 0, 0, _this3.ctx.canvas.width, _this3.ctx.canvas.height);
+	
+							// Capture a frame
+							_this3.capture.add(_this3.ctx, ts - dt);
+	
+							dt = ts;
+							if (_this3.capturing) requestAnimationFrame(captureLoop);
+						};
+	
+						dt = performance.now();
+						requestAnimationFrame(captureLoop);
+					})();
 				} else {
 					// Stop adding frames
-					clearInterval(this.interval);
-					this.emit('stream', URL.createObjectURL(this.capture.compile()));
+					this.capturing = false;
+					console.log(this.capture);
+					requestAnimationFrame(function (ts) {
+						return _this3.emit('stream', URL.createObjectURL(_this3.capture.compile()));
+					});
 				}
 			}
 		}, {
