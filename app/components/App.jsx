@@ -74,7 +74,7 @@ class App extends React.Component {
 									 onSeek={ seeking => dispatch(setPlayMode( seeking ? playModes.PAUSE : playModes.PLAY )) } />
 						
 						<div className='btn-group center'>
-							<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RENDER</button>
+							<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => mediaManager.render() }>RENDER</button>
 						</div>
 					</div>
 				)

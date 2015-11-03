@@ -29,12 +29,12 @@ const store = createStore(app)
 */
 
 // New video sources
-mediaManager.on( 'sources', sources => {
+mediaManager.on('sources', sources => {
 	store.dispatch(setSources(sources))
 })
 
 // New video streams
-mediaManager.on( 'stream', (stream, live) => {
+mediaManager.on('stream', (stream, live) => {
 	// Set new stream
 	store.dispatch(setStream(stream))
 
@@ -42,8 +42,14 @@ mediaManager.on( 'stream', (stream, live) => {
 	store.dispatch(setDisplay( live ? displayModes.RECORD : displayModes.PLAYBACK ))
 })
 
+// New video streams
+mediaManager.on('progress', progress => {
+	// console.log('progress', progress)
+})
+
 // New capture preview
-mediaManager.on( 'preview', (previewUrl) => {
+mediaManager.on('preview', (previewUrl) => {
+	console.log('preview', previewUrl)
 	// Update the preview URL
 	store.dispatch(setPreview(previewUrl))
 

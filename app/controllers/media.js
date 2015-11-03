@@ -1,6 +1,6 @@
 import { GIF } from 'gif.js/dist/gif'
 import Emitter from 'eventemitter3'
-import Whammy  from './whammy'
+import capture from './capture'
 
 // Shim getUserMedia
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
@@ -19,7 +19,8 @@ class MediaManager extends Emitter {
 		super()
 
 		// Create a canvas context
-		this.ctx = document.createElement('CANVAS').getContext('2d')
+		this.ctx  = document.createElement('CANVAS').getContext('2d')
+		this.rctx = document.createElement('CANVAS').getContext('2d')
 
 		// Video capture settings
 		this.constraints = {
@@ -42,7 +43,7 @@ class MediaManager extends Emitter {
 		this.sources = []
 
 		// Captured frames
-		this.frames = []
+		this.frames = null
 	}
 
 	// Get available video sources
@@ -116,55 +117,28 @@ class MediaManager extends Emitter {
 			// Clear the frame capture
 			this.frames = []
 
-			// Captured image frames
-			this.capture = new Whammy.Video(undefined, QUALITY)
-
 			// Update canvas dimensions
-			this.ctx.canvas.width  = this.video.videoWidth
-			this.ctx.canvas.height = this.video.videoHeight
+			this.ctx.canvas.width   = this.video.videoWidth
+			this.rctx.canvas.width  = this.video.videoWidth
+			this.ctx.canvas.height  = this.video.videoHeight
+			this.rctx.canvas.height = this.video.videoHeight
 
-			this.capturing = true
-
-			// Start adding frames at playback framerate
-			let dt
-
-			const captureLoop = (ts) => {
-				let n, now = Date.now()
-
+			this.interval = setInterval((ts) => {
 				// Draw video to canvas
 				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
-				n = Date.now()
-				console.log('1 - ', n - now)
-				now = n
-
 				// Capture a frame
-				this.capture.add(this.ctx, ts - dt)
-
-				n = Date.now()
-				console.log('2 - ', n - now)
-				now = n
-
 				this.frames.push( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
-				n = Date.now()
-				console.log('3 - ', n - now)
-				now = n
-
-				dt = ts
-				if (this.capturing) requestAnimationFrame(captureLoop)
-			}
-
-			dt = performance.now()
-			requestAnimationFrame(captureLoop)
+			}, FRAME_RATE)
 
 		} else {
 			// Stop adding frames
-			this.capturing = false
-			console.log(this.capture)
-			requestAnimationFrame(ts => this.emit('stream', URL.createObjectURL( this.capture.compile() )) )
-			// requestAnimationFrame(
-			// 	ts => this.emit('stream', URL.createObjectURL( Whammy.fromImageArray(image[], FRAME_RATE) )) 
-			// )
+			clearInterval(this.interval)
+
+			// Render from image sequence and emit a new stream
+			capture(this.frames, this.ctx, FRAME_RATE, (done, data) => {
+				done ? this.emit('stream', URL.createObjectURL(data) ) : this.emit('progress', data)
+			})
 		}
 	}
 
@@ -174,8 +148,59 @@ class MediaManager extends Emitter {
 	}
 
 	handleUpload(file) {
+		this.frames = undefined
 		this.file = file
-		this.emit('stream', file.path)//URL.createObjectURL(file))
+		this.emit('stream', file.path)
+	}
+
+	render() {
+		// Prep canvas for a clean render
+		this.rctx.clearRect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height)
+		this.rctx.rect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height)
+		this.rctx.fillStyle='black'
+		this.rctx.fill()
+		this.rctx.save()
+		this.rctx.globalCompositeOperation = 'lighten'
+
+		// Render frame capture
+		if (this.frames && frames.length) {
+			console.log('FRAMES')
+			this.frames.forEach( (frame, i) => {
+				console.log(i, this.frames.length)
+				this.renderFrame(frame)
+			})
+		} 
+		
+		// Render video stream
+		else {
+			this.video.pause()
+			this.video.currentFrame = 0
+			this.video.loop = false
+
+			let fn = () => {
+				if (this.video.paused || this.video.ended) return this.finishRender()
+				this.ctx.drawImage(this.video, 0, 0, this.width, this.height)
+				this.renderFrame( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
+				requestAnimationFrame(fn)
+			}
+
+			this.video.onplay = fn
+
+			// Start capturing
+			this.video.play()
+		}
+	}
+
+	renderFrame(frame) {
+		console.log('render')
+		this.rctx.putImageData(frame, 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight)
+	}
+
+	finishRender() {
+		// Unassign onplay handler
+		this.video.onplay = undefined
+		this.video.loop = true
+		this.emit('preview', this.rctx.canvas.toDataURL())
 	}
 }
 

@@ -74,8 +74,14 @@ webpackJsonp([0],[
 		store.dispatch((0, _actions.setDisplay)(live ? _actions.displayModes.RECORD : _actions.displayModes.PLAYBACK));
 	});
 	
+	// New video streams
+	_controllersMedia2['default'].on('progress', function (progress) {
+		// console.log('progress', progress)
+	});
+	
 	// New capture preview
 	_controllersMedia2['default'].on('preview', function (previewUrl) {
+		console.log('preview', previewUrl);
 		// Update the preview URL
 		store.dispatch((0, _actions.setPreview)(previewUrl));
 	
@@ -1814,7 +1820,7 @@ webpackJsonp([0],[
 								_react2['default'].createElement(
 									'button',
 									{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
-											return _this.record(_this.props.recording);
+											return _controllersMedia2['default'].render();
 										} },
 									'RENDER'
 								)
@@ -2657,9 +2663,9 @@ webpackJsonp([0],[
 	
 	var _eventemitter32 = _interopRequireDefault(_eventemitter3);
 	
-	var _whammy = __webpack_require__(283);
+	var _capture = __webpack_require__(286);
 	
-	var _whammy2 = _interopRequireDefault(_whammy);
+	var _capture2 = _interopRequireDefault(_capture);
 	
 	// Shim getUserMedia
 	navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -2683,6 +2689,7 @@ webpackJsonp([0],[
 	
 			// Create a canvas context
 			this.ctx = document.createElement('CANVAS').getContext('2d');
+			this.rctx = document.createElement('CANVAS').getContext('2d');
 	
 			// Video capture settings
 			this.constraints = {
@@ -2696,7 +2703,7 @@ webpackJsonp([0],[
 			this.sources = [];
 	
 			// Captured frames
-			this.frames = [];
+			this.frames = null;
 		}
 	
 		// Export a singleton instance of the media manager
@@ -2783,62 +2790,30 @@ webpackJsonp([0],[
 				// `rec` is a boolean for start/stop
 	
 				if (rec) {
-					(function () {
-						// Clear the frame capture
-						_this3.frames = [];
+					// Clear the frame capture
+					this.frames = [];
 	
-						// Captured image frames
-						_this3.capture = new _whammy2['default'].Video(undefined, QUALITY);
+					// Update canvas dimensions
+					this.ctx.canvas.width = this.video.videoWidth;
+					this.rctx.canvas.width = this.video.videoWidth;
+					this.ctx.canvas.height = this.video.videoHeight;
+					this.rctx.canvas.height = this.video.videoHeight;
 	
-						// Update canvas dimensions
-						_this3.ctx.canvas.width = _this3.video.videoWidth;
-						_this3.ctx.canvas.height = _this3.video.videoHeight;
+					this.interval = setInterval(function (ts) {
+						// Draw video to canvas
+						_this3.ctx.drawImage(_this3.video, 0, 0, _this3.video.videoWidth, _this3.video.videoHeight, 0, 0, _this3.ctx.canvas.width, _this3.ctx.canvas.height);
 	
-						_this3.capturing = true;
-	
-						// Start adding frames at playback framerate
-						var dt = undefined;
-	
-						var captureLoop = function captureLoop(ts) {
-							var n = undefined,
-							    now = Date.now();
-	
-							// Draw video to canvas
-							_this3.ctx.drawImage(_this3.video, 0, 0, _this3.video.videoWidth, _this3.video.videoHeight, 0, 0, _this3.ctx.canvas.width, _this3.ctx.canvas.height);
-	
-							n = Date.now();
-							console.log('1 - ', n - now);
-							now = n;
-	
-							// Capture a frame
-							_this3.capture.add(_this3.ctx, ts - dt);
-	
-							n = Date.now();
-							console.log('2 - ', n - now);
-							now = n;
-	
-							_this3.frames.push(_this3.ctx.getImageData(0, 0, _this3.video.videoWidth, _this3.video.videoHeight));
-							n = Date.now();
-							console.log('3 - ', n - now);
-							now = n;
-	
-							dt = ts;
-							if (_this3.capturing) requestAnimationFrame(captureLoop);
-						};
-	
-						dt = performance.now();
-						requestAnimationFrame(captureLoop);
-					})();
+						// Capture a frame
+						_this3.frames.push(_this3.ctx.getImageData(0, 0, _this3.video.videoWidth, _this3.video.videoHeight));
+					}, FRAME_RATE);
 				} else {
 					// Stop adding frames
-					this.capturing = false;
-					console.log(this.capture);
-					requestAnimationFrame(function (ts) {
-						return _this3.emit('stream', URL.createObjectURL(_this3.capture.compile()));
+					clearInterval(this.interval);
+	
+					// Render from image sequence and emit a new stream
+					(0, _capture2['default'])(this.frames, this.ctx, FRAME_RATE, function (done, data) {
+						done ? _this3.emit('stream', URL.createObjectURL(data)) : _this3.emit('progress', data);
 					});
-					// requestAnimationFrame(
-					// 	ts => this.emit('stream', URL.createObjectURL( Whammy.fromImageArray(image[], FRAME_RATE) ))
-					// )
 				}
 			}
 		}, {
@@ -2854,8 +2829,66 @@ webpackJsonp([0],[
 		}, {
 			key: 'handleUpload',
 			value: function handleUpload(file) {
+				this.frames = undefined;
 				this.file = file;
-				this.emit('stream', file.path); //URL.createObjectURL(file))
+				this.emit('stream', file.path);
+			}
+		}, {
+			key: 'render',
+			value: function render() {
+				var _this5 = this;
+	
+				// Prep canvas for a clean render
+				this.rctx.clearRect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height);
+				this.rctx.rect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height);
+				this.rctx.fillStyle = 'black';
+				this.rctx.fill();
+				this.rctx.save();
+				this.rctx.globalCompositeOperation = 'lighten';
+	
+				// Render frame capture
+				if (this.frames && frames.length) {
+					console.log('FRAMES');
+					this.frames.forEach(function (frame, i) {
+						console.log(i, _this5.frames.length);
+						_this5.renderFrame(frame);
+					});
+				}
+	
+				// Render video stream
+				else {
+						(function () {
+							_this5.video.pause();
+							_this5.video.currentFrame = 0;
+							_this5.video.loop = false;
+	
+							var fn = function fn() {
+								if (_this5.video.paused || _this5.video.ended) return _this5.finishRender();
+								_this5.ctx.drawImage(_this5.video, 0, 0, _this5.width, _this5.height);
+								_this5.renderFrame(_this5.ctx.getImageData(0, 0, _this5.video.videoWidth, _this5.video.videoHeight));
+								requestAnimationFrame(fn);
+							};
+	
+							_this5.video.onplay = fn;
+	
+							// Start capturing
+							_this5.video.play();
+						})();
+					}
+			}
+		}, {
+			key: 'renderFrame',
+			value: function renderFrame(frame) {
+				console.log('render');
+				this.rctx.putImageData(frame, 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight);
+			}
+		}, {
+			key: 'finishRender',
+			value: function finishRender() {
+				// Unassign onplay handler
+				this.video.onplay = undefined;
+				this.video.loop = true;
+				this.emit('preview', this.rctx.canvas.toDataURL());
 			}
 		}]);
 	
@@ -4603,6 +4636,101 @@ webpackJsonp([0],[
 	
 	exports["default"] = window.Whammy;
 	module.exports = exports["default"];
+
+/***/ },
+/* 284 */,
+/* 285 */,
+/* 286 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _interopRequireDefault = __webpack_require__(2)['default'];
+	
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+	
+	var _whammy = __webpack_require__(283);
+	
+	var _whammy2 = _interopRequireDefault(_whammy);
+	
+	function parseWebP(riff) {
+		var VP8 = riff.RIFF[0].WEBP[0];
+	
+		var frame_start = VP8.indexOf('\x9d\x01\x2a'); //A VP8 keyframe starts with the 0x9d012a header
+		for (var i = 0, c = []; i < 4; i++) c[i] = VP8.charCodeAt(frame_start + 3 + i);
+	
+		var width, horizontal_scale, height, vertical_scale, tmp;
+	
+		//the code below is literally copied verbatim from the bitstream spec
+		tmp = c[1] << 8 | c[0];
+		width = tmp & 0x3FFF;
+		horizontal_scale = tmp >> 14;
+		tmp = c[3] << 8 | c[2];
+		height = tmp & 0x3FFF;
+		vertical_scale = tmp >> 14;
+		return {
+			width: width,
+			height: height,
+			data: VP8,
+			riff: riff
+		};
+	}
+	
+	function parseRIFF(string) {
+		var offset = 0;
+		var chunks = {};
+	
+		while (offset < string.length) {
+			var id = string.substr(offset, 4);
+			chunks[id] = chunks[id] || [];
+			if (id == 'RIFF' || id == 'LIST') {
+				var len = parseInt(string.substr(offset + 4, 4).split('').map(function (i) {
+					var unpadded = i.charCodeAt(0).toString(2);
+					return new Array(8 - unpadded.length + 1).join('0') + unpadded;
+				}).join(''), 2);
+				var data = string.substr(offset + 4 + 4, len);
+				offset += 4 + 4 + len;
+				chunks[id].push(parseRIFF(data));
+			} else if (id == 'WEBP') {
+				// Use (offset + 8) to skip past "VP8 "/"VP8L"/"VP8X" field after "WEBP"
+				chunks[id].push(string.substr(offset + 8));
+				offset = string.length;
+			} else {
+				// Unknown chunk type; push entire payload
+				chunks[id].push(string.substr(offset + 4));
+				offset = string.length;
+			}
+		}
+	
+		return chunks;
+	}
+	
+	exports['default'] = function (frames, ctx, fps, callback) {
+		var doneFrames = [];
+	
+		function processFrame() {
+			ctx.putImageData(frames[doneFrames.length], 0, 0);
+	
+			var webp = parseWebP(parseRIFF(atob(ctx.canvas.toDataURL('image/webp', 0.05).slice(23))));
+			webp.duration = 1000 / fps;
+	
+			doneFrames.push(webp);
+	
+			if (doneFrames.length === frames.length) return returnFrames(doneFrames);
+			callback(false, doneFrames.length / frames.length);
+			requestAnimationFrame(processFrame);
+		}
+	
+		function returnFrames(frames) {
+			callback(true, _whammy2['default'].toWebM(frames));
+		}
+	
+		requestAnimationFrame(processFrame);
+	};
+	
+	module.exports = exports['default'];
 
 /***/ }
 ]);
