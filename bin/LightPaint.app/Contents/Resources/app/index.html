@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>LightPaint</title>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body style="-webkit-app-region: drag">
+	<div id="container">
+		<canvas></canvas>
+	</div>
+	<script type="text/javascript" src="vendor.js"></script>
+	<script type="text/javascript" src="index.js"></script>
+	<script type="text/javascript">
+		// Development only!
+		var fs = require('fs')
+
+		fs.watch(__dirname, function() {location && location.reload()})
+	</script>
+</body>
+</html>
