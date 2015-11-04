@@ -3,7 +3,7 @@ import ReactDOM 	 from 'react-dom'
 import { connect } from 'react-redux'
 
 // Actions
-import { setDisplay, setSource, recordVideo, setPosition, setPlayMode } from '../actions'
+import { setDisplay, setSource, recordVideo, setPosition, setPreview, setPlayMode } from '../actions'
 
 // Action constants
 import { displayModes, positionSources, playModes } from '../actions'
@@ -25,6 +25,7 @@ class App extends React.Component {
 
 	retry() {
 		this.props.dispatch( setDisplay(displayModes.RECORD) )
+		this.props.dispatch( setPreview('') )
 		mediaManager.getStream()
 	}
 
@@ -42,7 +43,8 @@ class App extends React.Component {
 				bottom = (
 					<div className='splash cover'>
 						<div className='splash-inner'>
-							LightPaint v1.0
+							<p>LightPaint v1.0</p>
+							<p>by Barak Chamo</p>
 						</div>
 					</div>
 				)

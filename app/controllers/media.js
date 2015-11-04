@@ -98,7 +98,7 @@ class MediaManager extends Emitter {
 								resolve( this.streamUrl )
 
 								// Emit a new streaming event with new source URL
-								this.emit('stream', this.streamUrl, true)
+								setTimeout(e => this.emit('stream', this.streamUrl, true), 1000)
 							},
 							error => reject( 'bummer...' )
 						)

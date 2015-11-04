@@ -1747,6 +1747,7 @@ webpackJsonp([0],[
 			key: 'retry',
 			value: function retry() {
 				this.props.dispatch((0, _actions.setDisplay)(_actions.displayModes.RECORD));
+				this.props.dispatch((0, _actions.setPreview)(''));
 				_controllersMedia2['default'].getStream();
 			}
 		}, {
@@ -1775,7 +1776,16 @@ webpackJsonp([0],[
 							_react2['default'].createElement(
 								'div',
 								{ className: 'splash-inner' },
-								'LightPaint v1.0'
+								_react2['default'].createElement(
+									'p',
+									null,
+									'LightPaint v1.0'
+								),
+								_react2['default'].createElement(
+									'p',
+									null,
+									'by Barak Chamo'
+								)
 							)
 						);
 	
@@ -2838,7 +2848,9 @@ webpackJsonp([0],[
 							resolve(_this2.streamUrl);
 	
 							// Emit a new streaming event with new source URL
-							_this2.emit('stream', _this2.streamUrl, true);
+							setTimeout(function (e) {
+								return _this2.emit('stream', _this2.streamUrl, true);
+							}, 1000);
 						}, function (error) {
 							return reject('bummer...');
 						});
