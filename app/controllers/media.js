@@ -150,21 +150,26 @@ class MediaManager extends Emitter {
 	handleUpload(file) {
 		this.frames = undefined
 		this.file = file
+		console.log(file)
 		this.emit('stream', file.path)
 	}
 
 	render() {
+		// Update canvas dimensions
+		this.ctx.canvas.width   = this.video.videoWidth
+		this.rctx.canvas.width  = this.video.videoWidth
+		this.ctx.canvas.height  = this.video.videoHeight
+		this.rctx.canvas.height = this.video.videoHeight
+
 		// Prep canvas for a clean render
 		this.rctx.clearRect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height)
 		this.rctx.rect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height)
 		this.rctx.fillStyle='black'
 		this.rctx.fill()
-		this.rctx.save()
-		this.rctx.globalCompositeOperation = 'lighten'
+		this.ctx.globalCompositeOperation = 'lighten'
 
 		// Render frame capture
 		if (this.frames && frames.length) {
-			console.log('FRAMES')
 			this.frames.forEach( (frame, i) => {
 				console.log(i, this.frames.length)
 				this.renderFrame(frame)
@@ -174,16 +179,18 @@ class MediaManager extends Emitter {
 		// Render video stream
 		else {
 			this.video.pause()
-			this.video.currentFrame = 0
+			this.video.playbackRate = 0.5
+			this.video.currentTime = 0
 			this.video.loop = false
 
 			let fn = () => {
 				if (this.video.paused || this.video.ended) return this.finishRender()
-				this.ctx.drawImage(this.video, 0, 0, this.width, this.height)
+				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight)
 				this.renderFrame( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
 				requestAnimationFrame(fn)
 			}
 
+			// Assign onPlay handler
 			this.video.onplay = fn
 
 			// Start capturing
@@ -192,14 +199,15 @@ class MediaManager extends Emitter {
 	}
 
 	renderFrame(frame) {
-		console.log('render')
 		this.rctx.putImageData(frame, 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight)
 	}
 
 	finishRender() {
 		// Unassign onplay handler
+		this.ctx.globalCompositeOperation = 'source-over'
 		this.video.onplay = undefined
 		this.video.loop = true
+		this.video.playbackRate = 1
 		this.emit('preview', this.rctx.canvas.toDataURL())
 	}
 }
