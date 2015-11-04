@@ -1,5 +1,6 @@
 import { GIF } from 'gif.js/dist/gif'
 import Emitter from 'eventemitter3'
+import capture from './capture'
 
 // Shim getUserMedia
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
@@ -10,14 +11,16 @@ const input = document.createElement('input')
 input.type = 'file'
 input.accept = 'video/*'
 
-const FRAME_RATE = 1000 / 25
+const FRAME_RATE = 25,
+			QUALITY    = 0.01
 
 class MediaManager extends Emitter {
 	constructor() {
 		super()
 
 		// Create a canvas context
-		this.ctx = document.createElement('CANVAS').getContext('2d')
+		this.ctx  = document.createElement('CANVAS').getContext('2d')
+		this.rctx = document.createElement('CANVAS').getContext('2d')
 
 		// Video capture settings
 		this.constraints = {
@@ -38,6 +41,9 @@ class MediaManager extends Emitter {
 
 		// Get available video sources
 		this.sources = []
+
+		// Captured frames
+		this.frames = null
 	}
 
 	// Get available video sources
@@ -108,50 +114,32 @@ class MediaManager extends Emitter {
 		// `rec` is a boolean for start/stop
 
 		if (rec) {
-			// Create new GIF capture
-			this.capture = new GIF({
-				workers: 8,
-				quality: 10,
-				width:   this.video.videoWidth,
-				height:  this.video.videoHeight
-			})
+			// Clear the frame capture
+			this.frames = []
 
 			// Update canvas dimensions
-			this.ctx.canvas.width  = this.video.videoWidth
-			this.ctx.canvas.height = this.video.videoHeight
+			this.ctx.canvas.width   = this.video.videoWidth
+			this.rctx.canvas.width  = this.video.videoWidth
+			this.ctx.canvas.height  = this.video.videoHeight
+			this.rctx.canvas.height = this.video.videoHeight
 
-			// Assign new capture handler
-			this.capture.on('finished', blob => {
-				this.preview = blob
-				console.dir(this.capture.frames)
-				// Emit a new preview event to update display
-				this.emit('preview', URL.createObjectURL(blob))
-			})
-
-			// Start adding frames at playback framerate
-			this.interval = setInterval(( ) => {
+			this.interval = setInterval((ts) => {
 				// Draw video to canvas
-    		this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
+				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
-    		// Add frame to capture
-	      this.capture.addFrame(this.ctx, {
-	        copy: true,
-	        delay: FRAME_RATE
-	      })
-		    
+				// Capture a frame
+				this.frames.push( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
 			}, FRAME_RATE)
 
 		} else {
 			// Stop adding frames
 			clearInterval(this.interval)
 
-			// Render capture
-			this.capture.render()
+			// Render from image sequence and emit a new stream
+			capture(this.frames, this.ctx, FRAME_RATE, (done, data) => {
+				done ? this.emit('stream', URL.createObjectURL(data) ) : this.emit('progress', data)
+			})
 		}
-	}
-
-	capture() {
-
 	}
 
 	upload() {
@@ -160,8 +148,67 @@ class MediaManager extends Emitter {
 	}
 
 	handleUpload(file) {
+		this.frames = undefined
 		this.file = file
-		this.emit('stream', file.path)//URL.createObjectURL(file))
+		console.log(file)
+		this.emit('stream', file.path)
+	}
+
+	render() {
+		// Update canvas dimensions
+		this.ctx.canvas.width   = this.video.videoWidth
+		this.rctx.canvas.width  = this.video.videoWidth
+		this.ctx.canvas.height  = this.video.videoHeight
+		this.rctx.canvas.height = this.video.videoHeight
+
+		// Prep canvas for a clean render
+		this.rctx.clearRect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height)
+		this.rctx.rect(0, 0, this.rctx.canvas.width, this.rctx.canvas.height)
+		this.rctx.fillStyle='black'
+		this.rctx.fill()
+		this.ctx.globalCompositeOperation = 'lighten'
+
+		// Render frame capture
+		if (this.frames && frames.length) {
+			this.frames.forEach( (frame, i) => {
+				this.emit('progress', i / frames.length)
+				this.renderFrame(frame)
+			})
+		} 
+		
+		// Render video stream
+		else {
+			this.video.pause()
+			this.video.playbackRate = 0.5
+			this.video.currentTime = 0
+			this.video.loop = false
+
+			let fn = () => {
+				if (this.video.paused || this.video.ended) return this.finishRender()
+				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight)
+				this.renderFrame( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
+				requestAnimationFrame(fn)
+			}
+
+			// Assign onPlay handler
+			this.video.onplay = fn
+
+			// Start capturing
+			this.video.play()
+		}
+	}
+
+	renderFrame(frame) {
+		this.rctx.putImageData(frame, 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight)
+	}
+
+	finishRender() {
+		// Unassign onplay handler
+		this.ctx.globalCompositeOperation = 'source-over'
+		this.video.onplay = undefined
+		this.video.loop = true
+		this.video.playbackRate = 1
+		this.emit('preview', this.rctx.canvas.toDataURL())
 	}
 }
 

@@ -3,13 +3,14 @@
 */
 
 // App display management
-export const SET_DISPLAY   = 'SET_DISPLAY'
-export const SET_PREVIEW   = 'SET_PREVIEW'
+export const SET_DISPLAY  = 'SET_DISPLAY'
+export const SET_PREVIEW  = 'SET_PREVIEW'
+export const SET_PROGRESS = 'SET_PROGRESS'
 
 // Capture and transport actions
-export const SET_SOURCE   = 'SET_SOURCE'
-export const SET_SOURCES  = 'SET_SOURCES'
-export const SET_STREAM   = 'SET_STREAM'
+export const SET_SOURCE  = 'SET_SOURCE'
+export const SET_SOURCES = 'SET_SOURCES'
+export const SET_STREAM  = 'SET_STREAM'
 
 export const RECORD_VIDEO = 'RECORD_VIDEO'
 export const UPLOAD_VIDEO = 'UPLOAD_VIDEO'
@@ -31,7 +32,8 @@ export const displayModes = {
 	SPLASH:   'SPLASH',
 	RECORD:   'RECORD',
 	PLAYBACK: 'PLAYBACK',
-	RENDER:   'RENDER'
+	RENDER:   'RENDER',
+	PROGRESS: 'PROGRESS'
 }
 
 export const playModes = {
@@ -60,8 +62,9 @@ export const positionSources = {
 */
 
 // App display management
-export const setDisplay = display => ({ type: SET_DISPLAY,  display })
-export const setPreview = preview => ({ type: SET_PREVIEW,  preview })
+export const setDisplay  = display  => ({ type: SET_DISPLAY,  display  })
+export const setPreview  = preview  => ({ type: SET_PREVIEW,  preview  })
+export const setProgress = progress => ({ type: SET_PROGRESS, progress })
 
 // Capture source management actions
 export const setSource  = source  => ({ type: SET_SOURCE,  source  })
