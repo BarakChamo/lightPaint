@@ -54,13 +54,22 @@ i {
 	display: flex;
 	left: 0;
 	right: 0;
-	background: white;
 	color: #666;
 	text-align: center;
 	align-items: center;
 	justify-content: center;
 
+	&.cover {
+		background: white;
+	}
+
 	.splash-inner {
 		flex-direction:column;
 	}
+}
+
+progress.progress {
+	width:25vw !important;
+	// height: 0.75em !important;
+	z-index: 100000;
 }

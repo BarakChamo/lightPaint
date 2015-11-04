@@ -30,7 +30,7 @@ class App extends React.Component {
 		switch(this.props.display) {
 			case displayModes.SPLASH:
 				bottom = (
-					<div className='splash'>
+					<div className='splash cover'>
 						<div className='splash-inner'>
 							LightPaint v1.0
 						</div>
@@ -86,6 +86,17 @@ class App extends React.Component {
 					<div className='btn-group center'>
 						<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.record(this.props.recording) }>RECORD</button>
 						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => mediaManager.upload() }>UPLOAD</button>
+					</div>
+				)
+
+				break;
+
+			case displayModes.PROGRESS:
+				bottom = (
+					<div className='splash'>
+						<div className='splash-inner'>
+							<progress className='progress progress-info' value={ String(Math.round(this.props.progress * 100)) } max='100'>25%</progress>
+						</div>
 					</div>
 				)
 

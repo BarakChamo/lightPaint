@@ -171,7 +171,7 @@ class MediaManager extends Emitter {
 		// Render frame capture
 		if (this.frames && frames.length) {
 			this.frames.forEach( (frame, i) => {
-				console.log(i, this.frames.length)
+				this.emit('progress', i / frames.length)
 				this.renderFrame(frame)
 			})
 		} 

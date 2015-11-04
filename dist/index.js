@@ -76,7 +76,8 @@ webpackJsonp([0],[
 	
 	// New video streams
 	_controllersMedia2['default'].on('progress', function (progress) {
-		// console.log('progress', progress)
+		store.dispatch((0, _actions.setDisplay)(_actions.displayModes.PROGRESS));
+		store.dispatch((0, _actions.setProgress)(progress));
 	});
 	
 	// New capture preview
@@ -1453,6 +1454,10 @@ webpackJsonp([0],[
 		if (state === undefined) state = '';
 		return action.type !== _actions.SET_PREVIEW ? state : action.preview;
 	};
+	var progress = function progress(state, action) {
+		if (state === undefined) state = 0.0;
+		return action.type !== _actions.SET_PROGRESS ? state : action.progress;
+	};
 	var position = function position(state, action) {
 		if (state === undefined) state = { pos: 0 };
 		return action.type !== _actions.SET_POSITION ? state : action;
@@ -1497,6 +1502,7 @@ webpackJsonp([0],[
 		sources: sources,
 		stream: stream,
 		preview: preview,
+		progress: progress,
 		recording: recording,
 		display: display,
 		position: position,
@@ -1525,8 +1531,10 @@ webpackJsonp([0],[
 	var SET_DISPLAY = 'SET_DISPLAY';
 	exports.SET_DISPLAY = SET_DISPLAY;
 	var SET_PREVIEW = 'SET_PREVIEW';
-	
 	exports.SET_PREVIEW = SET_PREVIEW;
+	var SET_PROGRESS = 'SET_PROGRESS';
+	
+	exports.SET_PROGRESS = SET_PROGRESS;
 	// Capture and transport actions
 	var SET_SOURCE = 'SET_SOURCE';
 	exports.SET_SOURCE = SET_SOURCE;
@@ -1563,7 +1571,8 @@ webpackJsonp([0],[
 		SPLASH: 'SPLASH',
 		RECORD: 'RECORD',
 		PLAYBACK: 'PLAYBACK',
-		RENDER: 'RENDER'
+		RENDER: 'RENDER',
+		PROGRESS: 'PROGRESS'
 	};
 	
 	exports.displayModes = displayModes;
@@ -1603,8 +1612,12 @@ webpackJsonp([0],[
 	var setPreview = function setPreview(preview) {
 		return { type: SET_PREVIEW, preview: preview };
 	};
-	
 	exports.setPreview = setPreview;
+	var setProgress = function setProgress(progress) {
+		return { type: SET_PROGRESS, progress: progress };
+	};
+	
+	exports.setProgress = setProgress;
 	// Capture source management actions
 	var setSource = function setSource(source) {
 		return { type: SET_SOURCE, source: source };
@@ -1746,7 +1759,7 @@ webpackJsonp([0],[
 					case _actions.displayModes.SPLASH:
 						bottom = _react2['default'].createElement(
 							'div',
-							{ className: 'splash' },
+							{ className: 'splash cover' },
 							_react2['default'].createElement(
 								'div',
 								{ className: 'splash-inner' },
@@ -1846,6 +1859,23 @@ webpackJsonp([0],[
 										return _controllersMedia2['default'].upload();
 									} },
 								'UPLOAD'
+							)
+						);
+	
+						break;
+	
+					case _actions.displayModes.PROGRESS:
+						bottom = _react2['default'].createElement(
+							'div',
+							{ className: 'splash' },
+							_react2['default'].createElement(
+								'div',
+								{ className: 'splash-inner' },
+								_react2['default'].createElement(
+									'progress',
+									{ className: 'progress progress-info', value: String(Math.round(this.props.progress * 100)), max: '100' },
+									'25%'
+								)
 							)
 						);
 	
@@ -2854,7 +2884,7 @@ webpackJsonp([0],[
 				// Render frame capture
 				if (this.frames && frames.length) {
 					this.frames.forEach(function (frame, i) {
-						console.log(i, _this5.frames.length);
+						_this5.emit('progress', i / frames.length);
 						_this5.renderFrame(frame);
 					});
 				}

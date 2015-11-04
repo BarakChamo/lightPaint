@@ -16,7 +16,7 @@ import App from './components/App'
 import mediaManager from './controllers/media'
 
 // Actions
-import { setSources, setStream, setDisplay, setPreview } from './actions'
+import { setSources, setStream, setDisplay, setPreview, setProgress } from './actions'
 
 // Action Constants
 import { displayModes } from './actions'
@@ -44,7 +44,8 @@ mediaManager.on('stream', (stream, live) => {
 
 // New video streams
 mediaManager.on('progress', progress => {
-	// console.log('progress', progress)
+	store.dispatch(setDisplay( displayModes.PROGRESS ))
+	store.dispatch(setProgress( progress ))
 })
 
 // New capture preview
