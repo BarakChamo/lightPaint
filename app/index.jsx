@@ -50,12 +50,11 @@ mediaManager.on('progress', progress => {
 
 // New capture preview
 mediaManager.on('preview', (previewUrl) => {
-	console.log('preview', previewUrl)
 	// Update the preview URL
 	store.dispatch(setPreview(previewUrl))
 
 	// Set the display to playback preview mode
-	store.dispatch(setDisplay(displayModes.PLAYBACK))
+	store.dispatch(setDisplay(displayModes.PREVIEW))
 })
 
 

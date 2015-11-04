@@ -82,12 +82,11 @@ webpackJsonp([0],[
 	
 	// New capture preview
 	_controllersMedia2['default'].on('preview', function (previewUrl) {
-		console.log('preview', previewUrl);
 		// Update the preview URL
 		store.dispatch((0, _actions.setPreview)(previewUrl));
 	
 		// Set the display to playback preview mode
-		store.dispatch((0, _actions.setDisplay)(_actions.displayModes.PLAYBACK));
+		store.dispatch((0, _actions.setDisplay)(_actions.displayModes.PREVIEW));
 	});
 	
 	/*
@@ -1572,7 +1571,8 @@ webpackJsonp([0],[
 		RECORD: 'RECORD',
 		PLAYBACK: 'PLAYBACK',
 		RENDER: 'RENDER',
-		PROGRESS: 'PROGRESS'
+		PROGRESS: 'PROGRESS',
+		PREVIEW: 'PREVIEW'
 	};
 	
 	exports.displayModes = displayModes;
@@ -1744,6 +1744,18 @@ webpackJsonp([0],[
 				this.props.dispatch((0, _actions.recordVideo)(!this.props.recording));
 			}
 		}, {
+			key: 'retry',
+			value: function retry() {
+				this.props.dispatch((0, _actions.setDisplay)(_actions.displayModes.RECORD));
+				_controllersMedia2['default'].getStream();
+			}
+		}, {
+			key: 'renderImage',
+			value: function renderImage() {
+				this.props.dispatch((0, _actions.setDisplay)(_actions.displayModes.PROGRESS));
+				_controllersMedia2['default'].render();
+			}
+		}, {
 			key: 'render',
 			value: function render() {
 				var _this = this;
@@ -1810,7 +1822,7 @@ webpackJsonp([0],[
 							_react2['default'].createElement(
 								'button',
 								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
-										return console.log('BACK');
+										return _this.retry();
 									} },
 								'BACK'
 							)
@@ -1833,7 +1845,7 @@ webpackJsonp([0],[
 								_react2['default'].createElement(
 									'button',
 									{ type: 'button', className: 'btn btn-sm btn-' + (this.props.recording ? 'danger' : 'secondary') + '-outline', onClick: function (e) {
-											return _controllersMedia2['default'].render();
+											return _this.renderImage();
 										} },
 									'RENDER'
 								)
@@ -1876,6 +1888,31 @@ webpackJsonp([0],[
 									{ className: 'progress progress-info', value: String(Math.round(this.props.progress * 100)), max: '100' },
 									'25%'
 								)
+							)
+						);
+	
+						break;
+	
+					case _actions.displayModes.PREVIEW:
+						top = _react2['default'].createElement(
+							'div',
+							{ className: 'btn-group' },
+							_react2['default'].createElement(
+								'button',
+								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', onClick: function (e) {
+										return _this.retry();
+									} },
+								'BACK'
+							)
+						);
+	
+						bottom = _react2['default'].createElement(
+							'div',
+							{ className: 'btn-group center' },
+							_react2['default'].createElement(
+								'a',
+								{ type: 'button', className: 'btn btn-sm btn-secondary-outline', href: this.props.preview, download: true },
+								'SAVE'
 							)
 						);
 	
@@ -2696,6 +2733,8 @@ webpackJsonp([0],[
 	
 	var _capture2 = _interopRequireDefault(_capture);
 	
+	// import fs 		 from 'fs'
+	
 	// Shim getUserMedia
 	navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 	window.URL = URL || webkitURL;
@@ -2860,7 +2899,6 @@ webpackJsonp([0],[
 			value: function handleUpload(file) {
 				this.frames = undefined;
 				this.file = file;
-				console.log(file);
 				this.emit('stream', file.path);
 			}
 		}, {
@@ -2891,31 +2929,36 @@ webpackJsonp([0],[
 	
 				// Render video stream
 				else {
-						(function () {
-							_this5.video.pause();
-							_this5.video.playbackRate = 0.5;
-							_this5.video.currentTime = 0;
-							_this5.video.loop = false;
+						this.video.pause();
+						// this.video.playbackRate = 0.5
+						this.video.currentTime = 0;
+						this.video.loop = false;
 	
-							var fn = function fn() {
-								if (_this5.video.paused || _this5.video.ended) return _this5.finishRender();
-								_this5.ctx.drawImage(_this5.video, 0, 0, _this5.video.videoWidth, _this5.video.videoHeight);
-								_this5.renderFrame(_this5.ctx.getImageData(0, 0, _this5.video.videoWidth, _this5.video.videoHeight));
-								requestAnimationFrame(fn);
-							};
+						this.timeUpdateHandler = this.renderFrame.bind(this);
+						this.video.addEventListener('canplay', this.timeUpdateHandler);
 	
-							// Assign onPlay handler
-							_this5.video.onplay = fn;
-	
-							// Start capturing
-							_this5.video.play();
-						})();
+						requestAnimationFrame(function (ts) {
+							return _this5.renderFrame();
+						});
 					}
 			}
 		}, {
 			key: 'renderFrame',
-			value: function renderFrame(frame) {
-				this.rctx.putImageData(frame, 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight);
+			value: function renderFrame() {
+				var _this6 = this;
+	
+				this.emit('progress', this.video.currentTime / this.video.duration);
+	
+				if (this.video.currentTime >= this.video.duration) return this.finishRender();
+	
+				requestAnimationFrame(function (ts) {
+					_this6.ctx.drawImage(_this6.video, 0, 0, _this6.video.videoWidth, _this6.video.videoHeight);
+					_this6.rctx.putImageData(_this6.ctx.getImageData(0, 0, _this6.video.videoWidth, _this6.video.videoHeight), 0, 0, 0, 0, _this6.video.videoWidth, _this6.video.videoHeight);
+	
+					_this6.video.currentTime += 1 / (FRAME_RATE + 1);
+	
+					if (_this6.video.currentTime >= _this6.video.duration) return _this6.finishRender();
+				});
 			}
 		}, {
 			key: 'finishRender',
@@ -2924,7 +2967,7 @@ webpackJsonp([0],[
 				this.ctx.globalCompositeOperation = 'source-over';
 				this.video.onplay = undefined;
 				this.video.loop = true;
-				this.video.playbackRate = 1;
+				this.video.removeEventListener('canplay', this.timeUpdateHandler);
 				this.emit('preview', this.rctx.canvas.toDataURL());
 			}
 		}]);

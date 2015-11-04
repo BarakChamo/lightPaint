@@ -3,7 +3,7 @@ import ReactDOM 	 from 'react-dom'
 import { connect } from 'react-redux'
 
 // Actions
-import { setSource, recordVideo, setPosition, setPlayMode } from '../actions'
+import { setDisplay, setSource, recordVideo, setPosition, setPlayMode } from '../actions'
 
 // Action constants
 import { displayModes, positionSources, playModes } from '../actions'
@@ -21,6 +21,16 @@ class App extends React.Component {
 		// Start/Stop recording in media manager
 		mediaManager.record(!recording)
 		this.props.dispatch(recordVideo(!this.props.recording))
+	}
+
+	retry() {
+		this.props.dispatch( setDisplay(displayModes.RECORD) )
+		mediaManager.getStream()
+	}
+
+	renderImage() {
+		this.props.dispatch( setDisplay(displayModes.PROGRESS) )
+		mediaManager.render()
 	}
 
 	render() {
@@ -62,7 +72,7 @@ class App extends React.Component {
 			case displayModes.PLAYBACK:
 				top = (
 					<div className='btn-group'>
-						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => console.log('BACK') }>BACK</button>
+						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => this.retry() }>BACK</button>
 					</div>
 				)
 
@@ -74,7 +84,7 @@ class App extends React.Component {
 									 onSeek={ seeking => dispatch(setPlayMode( seeking ? playModes.PAUSE : playModes.PLAY )) } />
 						
 						<div className='btn-group center'>
-							<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => mediaManager.render() }>RENDER</button>
+							<button type='button' className={`btn btn-sm btn-${ this.props.recording ? 'danger' : 'secondary' }-outline`} onClick={ e => this.renderImage() }>RENDER</button>
 						</div>
 					</div>
 				)
@@ -97,6 +107,21 @@ class App extends React.Component {
 						<div className='splash-inner'>
 							<progress className='progress progress-info' value={ String(Math.round(this.props.progress * 100)) } max='100'>25%</progress>
 						</div>
+					</div>
+				)
+
+				break;
+
+			case displayModes.PREVIEW:
+				top = (
+					<div className='btn-group'>
+						<button type='button' className='btn btn-sm btn-secondary-outline' onClick={ e => this.retry() }>BACK</button>
+					</div>
+				)
+
+				bottom = (
+					<div className='btn-group center'>
+						<a type='button' className='btn btn-sm btn-secondary-outline' href={ this.props.preview } download>SAVE</a>
 					</div>
 				)
 

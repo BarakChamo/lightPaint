@@ -1,6 +1,7 @@
 import { GIF } from 'gif.js/dist/gif'
 import Emitter from 'eventemitter3'
 import capture from './capture'
+// import fs 		 from 'fs'
 
 // Shim getUserMedia
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
@@ -150,7 +151,6 @@ class MediaManager extends Emitter {
 	handleUpload(file) {
 		this.frames = undefined
 		this.file = file
-		console.log(file)
 		this.emit('stream', file.path)
 	}
 
@@ -179,27 +179,30 @@ class MediaManager extends Emitter {
 		// Render video stream
 		else {
 			this.video.pause()
-			this.video.playbackRate = 0.5
+			// this.video.playbackRate = 0.5
 			this.video.currentTime = 0
 			this.video.loop = false
 
-			let fn = () => {
-				if (this.video.paused || this.video.ended) return this.finishRender()
-				this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight)
-				this.renderFrame( this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight) )
-				requestAnimationFrame(fn)
-			}
-
-			// Assign onPlay handler
-			this.video.onplay = fn
-
-			// Start capturing
-			this.video.play()
+			this.timeUpdateHandler = this.renderFrame.bind(this)
+			this.video.addEventListener('canplay', this.timeUpdateHandler)
+			
+			requestAnimationFrame( ts => this.renderFrame() )
 		}
 	}
 
-	renderFrame(frame) {
-		this.rctx.putImageData(frame, 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight)
+	renderFrame() {
+		this.emit('progress', this.video.currentTime / this.video.duration)
+		
+		if (this.video.currentTime >= this.video.duration) return this.finishRender()
+
+		requestAnimationFrame( ts => {
+			this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight)
+			this.rctx.putImageData(this.ctx.getImageData(0, 0, this.video.videoWidth, this.video.videoHeight), 0, 0, 0, 0, this.video.videoWidth, this.video.videoHeight)
+
+			this.video.currentTime += (1 / (FRAME_RATE + 1))
+
+			if (this.video.currentTime >= this.video.duration) return this.finishRender()
+		} )		
 	}
 
 	finishRender() {
@@ -207,7 +210,7 @@ class MediaManager extends Emitter {
 		this.ctx.globalCompositeOperation = 'source-over'
 		this.video.onplay = undefined
 		this.video.loop = true
-		this.video.playbackRate = 1
+		this.video.removeEventListener('canplay', this.timeUpdateHandler)
 		this.emit('preview', this.rctx.canvas.toDataURL())
 	}
 }

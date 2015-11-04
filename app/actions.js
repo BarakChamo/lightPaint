@@ -29,11 +29,12 @@ export const START_RENDER = 'START_RENDER'
 */ 
 
 export const displayModes = {
-	SPLASH:   'SPLASH',
-	RECORD:   'RECORD',
-	PLAYBACK: 'PLAYBACK',
-	RENDER:   'RENDER',
-	PROGRESS: 'PROGRESS'
+	SPLASH:    'SPLASH',
+	RECORD:    'RECORD',
+	PLAYBACK:  'PLAYBACK',
+	RENDER:    'RENDER',
+	PROGRESS:  'PROGRESS',
+	PREVIEW:   'PREVIEW'
 }
 
 export const playModes = {
