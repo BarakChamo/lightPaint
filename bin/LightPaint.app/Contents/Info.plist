@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>LightPaint</string>
 	<key>CFBundleExecutable</key>
-	<string>LightPaing</string>
+	<string>Electron</string>
 	<key>CFBundleIconFile</key>
 	<string>icon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -31,7 +31,7 @@
 	<key>DTXcodeBuild</key>
 	<string>7A1001</string>
 	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.photography</string>
+	<string>public.app-category.developer-tools</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.8.0</string>
 	<key>NSHighResolutionCapable</key>
